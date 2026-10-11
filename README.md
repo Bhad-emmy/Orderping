@@ -60,13 +60,13 @@ The public storefront deliberately uses server-side functions instead of anonymo
 - `vendor-reservations`: authenticates the vendor and returns reservations belonging only to the requested business after verifying ownership.
 - `update-reservation-status`: authenticates and authorizes the vendor before confirming/rejecting a reservation.
 
-**These functions are integration requirements, not included or deployed by the frontend change.** The public catalogue and submit flows will show an error until their functions are deployed. Reservation screens intentionally report the missing backend dependency rather than mislabeling purchases as reservations.
+**Backend status:** the five Edge Functions are deployed to the MEKA LOGIC Supabase project and their source is versioned under `supabase/functions/`. They still require end-to-end verification after the `orderping` schema is exposed in the Data API settings. The reservation migration is versioned under `supabase/migrations/`.
 
 ## Database and security notes
 
 OrderPing uses a dedicated `orderping` PostgreSQL schema in the existing MEKA LOGIC Supabase project. The Predivic School project is not used by this application.
 
-The existing foundation has `businesses`, `catalog_items`, `orders`, `order_items`, `appointments`, `business_hours`, `notification_logs`, and `rate_limit_buckets`. The current schema does **not** yet have a reservation discriminator or structured pickup timestamp. Add and test an additive migration before enabling reservations; do not reuse appointment overlap semantics for product reservations.
+The existing foundation has `businesses`, `catalog_items`, `orders`, `order_items`, `appointments`, `business_hours`, `notification_logs`, and `rate_limit_buckets`. The schema now has an `order_type` discriminator, `requested_pickup_at`, and reservation-specific status constraints. Product reservations are stored separately from purchases in the shared order ledger; do not reuse appointment overlap semantics for product reservations.
 
 The vendor dashboard uses Supabase Auth and owner RLS policies for business, catalogue, and order operations. Public customer reads and writes must remain behind validated Edge Functions. Do not add anonymous direct table access to private order/customer data.
 
