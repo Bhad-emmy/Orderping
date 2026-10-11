@@ -123,10 +123,7 @@ function VendorApp({ user }: { user: User }) {
   }, [user.id]);
   useEffect(() => { void loadData(); }, [loadData]);
   const activeOrders = useMemo(() => orders.filter(o => !["cancelled", "delivered"].includes(o.status)), [orders]);
-  const paid = useMemo(() => orders.reduce((s, o) => s + Number(o.amount_paid_minor || 0), 0), [orders]);
-  const outstanding = useMemo(() => orders.reduce((s, o) => s + Math.max(0, Number(o.total_amount_minor || 0) - Number(o.amount_paid_minor || 0)), 0), [orders]);
   const filteredOrders = useMemo(() => { const q = search.trim().toLowerCase(); return q ? orders.filter(o => [o.customer_name, o.customer_phone, o.id, o.status].some(v => String(v || "").toLowerCase().includes(q))) : orders; }, [orders, search]);
-  const storeUrl = business ? window.location.origin + "/store/" + business.slug : "";
   async function signOut() { if (supabase) { await supabase.auth.signOut(); navigate("/login"); } }
   function openProduct(product?: Product) {
     setEditingProduct(product || null);
