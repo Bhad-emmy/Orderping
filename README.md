@@ -24,7 +24,7 @@ OrderPing is a mobile-first vendor tool for product orders, product reservations
 - `/app` — dashboard overview
 - `/app/products` — add/edit/hide products
 - `/app/orders` — orders, statuses, and payment recording
-- `/app/reservations` — reservation requests (requires reservation Edge Functions)
+- `/app/reservations` — vendor reservation management
 - `/app/payments` — payment ledger
 - `/app/settings` — business profile and storefront URL
 - `/store/:slug` — public catalogue, order form, and reservation request UI
@@ -72,4 +72,4 @@ The vendor dashboard uses Supabase Auth and owner RLS policies for business, cat
 
 ## Deployment status
 
-The frontend code is being introduced on a feature branch and requires review, a successful `npm run build`, configured environment variables, and backend Edge Functions before the customer-facing flow is production-ready.
+The frontend and five Edge Functions are deployed/committed on the feature branch. Before production use, expose `orderping` in the Data API settings without removing existing schemas, verify the GitHub Actions build, configure Vercel environment variables, and complete end-to-end tests.
