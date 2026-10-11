@@ -1,0 +1,12 @@
+project_id = "baoqyhhyenimfhkrwspn"
+
+# Public customer endpoints intentionally accept guest requests.
+# They perform validation, server-side price calculation, and rate limiting.
+[functions.public-storefront]
+verify_jwt = false
+
+[functions.submit-order]
+verify_jwt = false
+
+[functions.submit-reservation]
+verify_jwt = false
