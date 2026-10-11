@@ -111,7 +111,7 @@ function VendorApp({ user }: { user: User }) {
       if (!current) { setProducts([]); setOrders([]); setReservations([]); return; }
       const [pr, or] = await Promise.all([
         supabase.from("catalog_items").select("*").eq("business_id", current.id).eq("type", "product").order("created_at", { ascending: false }),
-        supabase.from("orders").select("*").eq("business_id", current.id).order("created_at", { ascending: false }).limit(200),
+        supabase.from("orders").select("*").eq("business_id", current.id).eq("order_type", "order").order("created_at", { ascending: false }).limit(200),
       ]);
       if (pr.error) throw pr.error; if (or.error) throw or.error;
       setProducts((pr.data || []) as Product[]); setOrders((or.data || []) as Order[]);
