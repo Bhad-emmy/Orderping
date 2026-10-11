@@ -1,38 +1,75 @@
 # OrderPing
 
-OrderPing is a minimal, mobile-first SaaS for independent vendors to manage appointment bookings, product orders, payment records, and automated email + WhatsApp notifications.
+OrderPing is a mobile-first vendor tool for product orders, product reservations, and manual payment tracking.
 
-## V1 scope
+## First-customer V1 scope
 
-- Shareable business page with services or products
-- Appointment booking with server-side availability checks
-- Product orders and fulfilment status
-- Payment tracking only; no payment processing or custody
-- Vendor/customer email and WhatsApp notifications
-- Live dashboard updates without manual refresh
-- Server-side rate limiting, duplicate-submit protection, and tenant data isolation
+- Shareable public product catalogue.
+- Product orders with quantities and fulfilment choice.
+- Product reservations for later purchase or pickup.
+- Vendor dashboard for products, orders, reservations, and payments.
+- Payment tracking only; no payment processing or custody of funds.
+- Supabase Auth, row-level security, server-side validation, rate limiting, and tenant isolation.
 
-## Planned stack
+## Stack
 
-- Frontend: React + Vite
-- Auth/database/realtime: Supabase (PostgreSQL)
-- Server-side request handling: Supabase Edge Functions
-- Hosting: Vercel
+- Frontend: React + Vite + TypeScript
+- Auth/database: Supabase PostgreSQL and Auth
+- Public customer API: Supabase Edge Functions
+- Hosting target: Vercel
 
-## Security baseline
+## Frontend routes
 
-- Row Level Security (RLS) on all tenant-owned tables
-- Public submissions go through server-side functions; do not grant anonymous direct inserts to booking/order tables
-- Server-side rate limiting for public submissions
-- Supabase Auth's configured rate limits for authentication
-- Keep service-role and provider secrets out of browser code
+- `/login` — vendor sign-in and account creation
+- `/app` — dashboard overview
+- `/app/products` — add/edit/hide products
+- `/app/orders` — orders, statuses, and payment recording
+- `/app/reservations` — reservation requests (requires reservation Edge Functions)
+- `/app/payments` — payment ledger
+- `/app/settings` — business profile and storefront URL
+- `/store/:slug` — public catalogue, order form, and reservation request UI
 
-## Database isolation
+## Run locally
 
-OrderPing uses a dedicated `orderping` PostgreSQL schema inside the existing MEKA LOGIC Supabase project. It does not use the Predivic School project and does not create a third Supabase project. The schema has its own tables, RLS policies, booking-overlap guard, and rate-limit helper.
+1. Install Node.js 20 or later.
+2. Copy `.env.example` to `.env`.
+3. Set the Supabase project URL and publishable/anon key from the MEKA LOGIC project.
+4. In the Supabase dashboard, add `orderping` to **Project Settings → API → Exposed schemas** without removing existing schemas.
+5. Install dependencies and run the Vite server:
 
-Before the vendor frontend uses the schema, add `orderping` under **Supabase Dashboard → Project Settings → API → Exposed schemas**. Public customer reads and submissions still go through Edge Functions; do not grant anonymous direct table access.
+   ```bash
+   npm install
+   npm run dev
+   ```
 
-## Development status
+6. Run a production type-check/build before deploying:
 
-Stage 1 foundation has been applied to the MEKA LOGIC Supabase project. The frontend and Edge Functions remain to be built and verified.
+   ```bash
+   npm run build
+   ```
+
+Never place the Supabase service-role key or email/WhatsApp provider secrets in a `VITE_*` variable. Browser code is public.
+
+## Backend functions expected by this frontend
+
+The public storefront deliberately uses server-side functions instead of anonymous direct table access:
+
+- `public-storefront`: accepts `{ slug }`; returns `{ business, products }` for active products only.
+- `submit-order`: validates customer fields and product IDs/quantities, re-reads active prices, calculates totals server-side, rate-limits and deduplicates, then inserts an order and its line items.
+- `submit-reservation`: same validations as an order plus a future requested pickup timestamp; creates a distinct reservation, not a purchase sale.
+- `vendor-reservations`: authenticates the vendor and returns reservations belonging only to the requested business after verifying ownership.
+- `update-reservation-status`: authenticates and authorizes the vendor before confirming/rejecting a reservation.
+
+**These functions are integration requirements, not included or deployed by the frontend change.** The public catalogue and submit flows will show an error until their functions are deployed. Reservation screens intentionally report the missing backend dependency rather than mislabeling purchases as reservations.
+
+## Database and security notes
+
+OrderPing uses a dedicated `orderping` PostgreSQL schema in the existing MEKA LOGIC Supabase project. The Predivic School project is not used by this application.
+
+The existing foundation has `businesses`, `catalog_items`, `orders`, `order_items`, `appointments`, `business_hours`, `notification_logs`, and `rate_limit_buckets`. The current schema does **not** yet have a reservation discriminator or structured pickup timestamp. Add and test an additive migration before enabling reservations; do not reuse appointment overlap semantics for product reservations.
+
+The vendor dashboard uses Supabase Auth and owner RLS policies for business, catalogue, and order operations. Public customer reads and writes must remain behind validated Edge Functions. Do not add anonymous direct table access to private order/customer data.
+
+## Deployment status
+
+The frontend code is being introduced on a feature branch and requires review, a successful `npm run build`, configured environment variables, and backend Edge Functions before the customer-facing flow is production-ready.
