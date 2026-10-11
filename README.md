@@ -27,6 +27,12 @@ OrderPing is a minimal, mobile-first SaaS for independent vendors to manage appo
 - Supabase Auth's configured rate limits for authentication
 - Keep service-role and provider secrets out of browser code
 
+## Database isolation
+
+OrderPing uses a dedicated `orderping` PostgreSQL schema inside the existing MEKA LOGIC Supabase project. It does not use the Predivic School project and does not create a third Supabase project. The schema has its own tables, RLS policies, booking-overlap guard, and rate-limit helper.
+
+Before the vendor frontend uses the schema, add `orderping` under **Supabase Dashboard → Project Settings → API → Exposed schemas**. Public customer reads and submissions still go through Edge Functions; do not grant anonymous direct table access.
+
 ## Development status
 
-Stage 1: repository foundation, database schema, and security baseline.
+Stage 1 foundation has been applied to the MEKA LOGIC Supabase project. The frontend and Edge Functions remain to be built and verified.
