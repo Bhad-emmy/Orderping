@@ -1,6 +1,13 @@
 # OrderPing V1 Security Baseline
 
-This document defines required controls for the MVP. Do not expose public writes directly to database tables.
+This document defines required controls for the MVP. OrderPing tables live in the dedicated `orderping` schema inside the existing MEKA LOGIC Supabase project. Do not expose public writes directly to database tables.
+
+## Supabase schema setup
+
+- Add `orderping` to the project's **API settings → Exposed schemas** before using `supabase.schema('orderping')` from the vendor dashboard or subscribing to OrderPing Realtime changes.
+- The schema grants table access to `authenticated` with RLS as the row-level gate and to `service_role` for trusted Edge Functions. No table access is granted to `anon`.
+- Public business pages and customer submissions must be served through validated Edge Functions; do not grant `anon` direct access just to make public pages work.
+- The `orderping` schema and tables are separate from existing `public` tables used by MEKA LOGIC modules.
 
 ## Tenant isolation
 
