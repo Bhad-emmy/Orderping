@@ -216,7 +216,7 @@ begin
           else 1
         end,
         updated_at = clock_timestamp()
-  returning public.rate_limit_buckets.request_count into v_count;
+  returning existing.request_count into v_count;
 
   return query
     select
