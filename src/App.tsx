@@ -132,7 +132,8 @@ function WhatsAppContactForm() {
     </form>
   </section>;
 }
-\nfunction Brand({ light = false }: { light?: boolean }) {
+
+function Brand({ light = false }: { light?: boolean }) {
   return <Link to="/" className={"brand-lockup" + (light ? " light" : "")}><span className="brand-mark"><ShoppingBag size={21} /></span><span>orderping</span></Link>;
 }
 function SetupScreen() {
