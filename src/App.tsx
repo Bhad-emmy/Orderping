@@ -39,12 +39,70 @@ export default function App() {
   return <Routes>
     <Route path="/store/:slug" element={<Storefront />} />
     <Route path="/login" element={session ? <Navigate to="/app" replace /> : <AuthScreen />} />
-    <Route path="/" element={<Navigate to={session ? "/app" : "/login"} replace />} />
+    <Route path="/" element={<LandingPage signedIn={Boolean(session)} />} />
     <Route path="/app/*" element={session ? <VendorApp user={session.user} /> : <Navigate to="/login" replace />} />
     <Route path="*" element={<NotFound />} />
   </Routes>;
 }
 
+function LandingPage({ signedIn }: { signedIn: boolean }) {
+  return <main className="landing-page">
+    <header className="landing-nav">
+      <Brand />
+      <nav aria-label="Main navigation">
+        <a href="#how-it-works">How it works</a>
+        <a href="#features">Features</a>
+      </nav>
+      <div className="landing-nav-actions">
+        <Link className="landing-login-link" to={signedIn ? "/app" : "/login"}>{signedIn ? "Open dashboard" : "Sign in"}</Link>
+        <Link className="button primary" to={signedIn ? "/app" : "/login"}>{signedIn ? "Go to dashboard" : "Get started"} <ArrowRight size={15} /></Link>
+      </div>
+    </header>
+    <section className="landing-hero">
+      <div className="landing-copy">
+        <span className="landing-kicker"><span className="landing-kicker-dot" /> SIMPLE ORDER MANAGEMENT FOR SMALL BUSINESSES</span>
+        <h1>Turn your catalogue into <em>your next order.</em></h1>
+        <p>Share one clean store link. Let customers place orders or request reservations. Keep every order and payment record organised in one workspace.</p>
+        <div className="landing-hero-actions">
+          <Link className="button primary landing-primary" to={signedIn ? "/app" : "/login"}>{signedIn ? "Open your dashboard" : "Create your vendor account"} <ArrowRight size={17} /></Link>
+          <a className="button secondary landing-secondary" href="#how-it-works"><span className="landing-play">↘</span> See how it works</a>
+        </div>
+        <div className="landing-trust-line"><CheckCircle2 size={16} /> Customers order as guests <span /> No payment processing required</div>
+      </div>
+      <div className="landing-visual" aria-label="Illustration of an OrderPing vendor dashboard">
+        <div className="visual-glow" />
+        <div className="visual-window">
+          <div className="visual-window-top"><span className="visual-window-brand"><span className="visual-mini-mark"><ShoppingBag size={13} /></span> orderping</span><span className="visual-window-status"><i /> Vendor workspace</span></div>
+          <div className="visual-window-body">
+            <div className="visual-sidebar"><span className="visual-sidebar-brand" /><span className="visual-sidebar-active" /><span /><span /><span /><span /></div>
+            <div className="visual-dashboard">
+              <div className="visual-greeting"><div><small>YOUR BUSINESS AT A GLANCE</small><strong>Good morning, vendor</strong></div><span className="visual-avatar">OP</span></div>
+              <div className="visual-summary"><div><span>Open orders</span><strong>08</strong><i>↗ Today</i></div><div><span>Reservations</span><strong>04</strong><i>↗ Pending</i></div></div>
+              <div className="visual-orders-head"><strong>Recent orders</strong><span>View all</span></div>
+              <div className="visual-order-row"><span className="visual-product-dot peach" /><span className="visual-order-lines"><b>Everyday essentials</b><small>Customer order · #OP-1042</small></span><span className="visual-order-pill">New</span></div>
+              <div className="visual-order-row"><span className="visual-product-dot blue" /><span className="visual-order-lines"><b>Classic tote bag</b><small>Customer order · #OP-1041</small></span><span className="visual-order-pill processing">Processing</span></div>
+              <div className="visual-order-row"><span className="visual-product-dot green" /><span className="visual-order-lines"><b>Daily care bundle</b><small>Customer order · #OP-1040</small></span><span className="visual-order-pill ready">Ready</span></div>
+            </div>
+          </div>
+          <div className="visual-bottom-note"><CheckCircle2 size={14} /> One place for orders, reservations and payment records</div>
+        </div>
+        <div className="floating-note floating-note-top"><span className="floating-note-icon violet"><ShoppingBag size={17} /></span><span><b>New order received</b><small>Customer checkout complete</small></span><Check size={16} /></div>
+        <div className="floating-note floating-note-bottom"><span className="floating-note-icon mint"><Wallet size={17} /></span><span><b>Payment record updated</b><small>Balance tracked in one view</small></span><Check size={16} /></div>
+      </div>
+    </section>
+    <div className="landing-proof-strip"><div><strong>One link</strong><span>Share your catalogue</span></div><div><strong>Guest checkout</strong><span>No customer account needed</span></div><div><strong>Order clarity</strong><span>Track fulfilment status</span></div><div><strong>Payment ledger</strong><span>Know what is still due</span></div></div>
+    <section className="landing-section" id="how-it-works">
+      <div className="landing-section-heading"><span className="eyebrow">A SIMPLER WAY TO SELL</span><h2>From product list to organised orders.</h2><p>Keep the customer experience light and the admin work under control.</p></div>
+      <div className="landing-steps"><article><span className="landing-step-number">01</span><span className="landing-step-icon"><Store size={21} /></span><h3>Set up your storefront</h3><p>Add your business details and publish the products you want customers to see.</p></article><article><span className="landing-step-number">02</span><span className="landing-step-icon"><ExternalLink size={21} /></span><h3>Share one simple link</h3><p>Send your catalogue on WhatsApp, Instagram, or wherever your customers find you.</p></article><article><span className="landing-step-number">03</span><span className="landing-step-icon"><ClipboardList size={21} /></span><h3>Manage everything together</h3><p>Review incoming orders, respond to reservations, and record payments from your workspace.</p></article></div>
+    </section>
+    <section className="landing-feature-section" id="features">
+      <div className="landing-feature-intro"><span className="eyebrow">MADE FOR DAILY BUSINESS</span><h2>Less chasing. More clarity.</h2><p>OrderPing gives your day-to-day selling a clear home, whether your customers find you through social media or word of mouth.</p><Link className="text-link" to={signedIn ? "/app" : "/login"}>{signedIn ? "Go to your workspace" : "Start with OrderPing"} <ArrowRight size={15} /></Link></div>
+      <div className="landing-features-grid"><article><span className="landing-feature-icon violet"><ShoppingCart size={20} /></span><h3>Orders in one view</h3><p>See customer details, order status and fulfilment without searching through chats.</p></article><article><span className="landing-feature-icon mint"><Wallet size={20} /></span><h3>Manual payment tracking</h3><p>Record what has been received and keep outstanding balances visible.</p></article><article><span className="landing-feature-icon peach"><Clock3 size={20} /></span><h3>Product reservations</h3><p>Review and respond to requests from customers who want to reserve products.</p></article><article><span className="landing-feature-icon blue"><ShoppingBag size={20} /></span><h3>Customer-friendly storefront</h3><p>Customers browse and submit orders as guests, without creating an account.</p></article></div>
+    </section>
+    <section className="landing-cta"><div><span className="eyebrow">READY WHEN YOU ARE</span><h2>Give your orders a proper home.</h2><p>Start with your storefront, then manage each new order from one workspace.</p></div><Link className="button primary landing-primary" to={signedIn ? "/app" : "/login"}>{signedIn ? "Open dashboard" : "Create your vendor account"} <ArrowRight size={17} /></Link></section>
+    <footer className="landing-footer"><Brand /><span>Orders made simpler.</span><div><Link to="/login">Vendor sign in</Link><span>© {new Date().getFullYear()} OrderPing</span></div></footer>
+  </main>;
+}
 function Brand({ light = false }: { light?: boolean }) {
   return <Link to="/" className={"brand-lockup" + (light ? " light" : "")}><span className="brand-mark"><ShoppingBag size={21} /></span><span>orderping</span></Link>;
 }
