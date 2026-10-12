@@ -118,7 +118,7 @@ function WhatsAppContactForm() {
       "Name: " + name.trim(),
       "Phone: " + phone.trim(),
       "Message: " + message.trim(),
-    ].join("\\n");
+    ].join("\n");
     window.open("https://wa.me/2349066929361?text=" + encodeURIComponent(text), "_blank", "noopener,noreferrer");
   }
   return <section className="landing-contact" id="contact">
