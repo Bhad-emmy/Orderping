@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { Link, Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
-import { Activity, ArrowRight, Bell, Check, CheckCircle2, ChevronDown, CircleHelp, ClipboardList, Clock3, CreditCard, ExternalLink, Eye, EyeOff, LayoutDashboard, LoaderCircle, LogOut, Menu, Package, Plus, RefreshCw, Search, Settings, ShoppingBag, ShoppingCart, Store, Truck, Wallet, X } from "lucide-react";
+import { Activity, ArrowRight, Bell, Check, CheckCircle2, ChevronDown, CircleHelp, ClipboardList, Clock3, CreditCard, ExternalLink, Eye, EyeOff, LayoutDashboard, LoaderCircle, LogOut, Menu, Package, Plus, RefreshCw, Search, Settings, ShoppingBag, ShoppingCart, Store, Truck, Wallet, MessageCircle, X } from "lucide-react";
 import type { Session, User } from "@supabase/supabase-js";
 import { formatNaira, isSupabaseConfigured, messageFromError, supabase } from "./lib/supabase";
 
@@ -52,6 +52,7 @@ function LandingPage({ signedIn }: { signedIn: boolean }) {
       <nav aria-label="Main navigation">
         <a href="#how-it-works">How it works</a>
         <a href="#features">Features</a>
+        <a href="#contact">Contact</a>
       </nav>
       <div className="landing-nav-actions">
         <Link className="landing-login-link" to={signedIn ? "/app" : "/login"}>{signedIn ? "Open dashboard" : "Sign in"}</Link>
@@ -100,10 +101,38 @@ function LandingPage({ signedIn }: { signedIn: boolean }) {
       <div className="landing-features-grid"><article><span className="landing-feature-icon violet"><ShoppingCart size={20} /></span><h3>Orders in one view</h3><p>See customer details, order status and fulfilment without searching through chats.</p></article><article><span className="landing-feature-icon mint"><Wallet size={20} /></span><h3>Manual payment tracking</h3><p>Record what has been received and keep outstanding balances visible.</p></article><article><span className="landing-feature-icon peach"><Clock3 size={20} /></span><h3>Product reservations</h3><p>Review and respond to requests from customers who want to reserve products.</p></article><article><span className="landing-feature-icon blue"><ShoppingBag size={20} /></span><h3>Customer-friendly storefront</h3><p>Customers browse and submit orders as guests, without creating an account.</p></article></div>
     </section>
     <section className="landing-cta"><div><span className="eyebrow">READY WHEN YOU ARE</span><h2>Give your orders a proper home.</h2><p>Start with your storefront, then manage each new order from one workspace.</p></div><Link className="button primary landing-primary" to={signedIn ? "/app" : "/login"}>{signedIn ? "Open dashboard" : "Create your vendor account"} <ArrowRight size={17} /></Link></section>
-    <footer className="landing-footer"><Brand /><span>Orders made simpler.</span><div><Link to="/login">Vendor sign in</Link><span>© {new Date().getFullYear()} OrderPing</span></div></footer>
+    <WhatsAppContactForm />
+    <footer className="landing-footer"><Brand /><span>Orders made simpler.</span><div><a href="https://wa.me/2349066929361" target="_blank" rel="noreferrer">WhatsApp us</a><Link to="/login">Vendor sign in</Link><span>© {new Date().getFullYear()} OrderPing</span></div></footer>
   </main>;
 }
-function Brand({ light = false }: { light?: boolean }) {
+
+function WhatsAppContactForm() {
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [message, setMessage] = useState("");
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    const text = [
+      "Hi OrderPing team! I'd like to make an enquiry.",
+      "",
+      "Name: " + name.trim(),
+      "Phone: " + phone.trim(),
+      "Message: " + message.trim(),
+    ].join("\\n");
+    window.open("https://wa.me/2349066929361?text=" + encodeURIComponent(text), "_blank", "noopener,noreferrer");
+  }
+  return <section className="landing-contact" id="contact">
+    <div className="landing-contact-copy"><span className="eyebrow">NEED A HAND?</span><h2>Talk to the OrderPing team.</h2><p>Send your enquiry through WhatsApp. We'll prepare your message and let you send it from your WhatsApp account.</p><a className="button secondary" href="https://wa.me/2349066929361" target="_blank" rel="noreferrer"><MessageCircle size={16} /> Chat on WhatsApp</a></div>
+    <form className="landing-contact-form" onSubmit={submit}>
+      <label>Your name<input required maxLength={120} value={name} onChange={e => setName(e.target.value)} placeholder="Full name" /></label>
+      <label>Phone number<input required type="tel" maxLength={32} value={phone} onChange={e => setPhone(e.target.value)} placeholder="+234…" /></label>
+      <label>Your message<textarea required rows={4} maxLength={1000} value={message} onChange={e => setMessage(e.target.value)} placeholder="How can we help?" /></label>
+      <button className="button primary full" type="submit"><MessageCircle size={16} /> Continue to WhatsApp</button>
+      <p className="field-hint">WhatsApp opens with your message ready. You still need to tap Send.</p>
+    </form>
+  </section>;
+}
+\nfunction Brand({ light = false }: { light?: boolean }) {
   return <Link to="/" className={"brand-lockup" + (light ? " light" : "")}><span className="brand-mark"><ShoppingBag size={21} /></span><span>orderping</span></Link>;
 }
 function SetupScreen() {
