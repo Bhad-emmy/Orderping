@@ -119,22 +119,7 @@ function AuthScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [googleBusy, setGoogleBusy] = useState(false);
   const navigate = useNavigate();
-  async function signInWithGoogle() {
-    if (!supabase) return;
-    setGoogleBusy(true); setError("");
-    try {
-      const { error: authError } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/app`,
-          queryParams: { prompt: "select_account" },
-        },
-      });
-      if (authError) throw authError;
-    } catch (err) { setError(messageFromError(err)); setGoogleBusy(false); }
-  }
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (!supabase) return;
@@ -153,9 +138,43 @@ function AuthScreen() {
     } catch (err) { setError(messageFromError(err)); }
     finally { setBusy(false); }
   }
-  return <div className="auth-page"><section className="auth-story"><Brand light /><div className="story-content"><span className="eyebrow light-eyebrow">LESS ADMIN. MORE BUSINESS.</span><h1>Every order,<br /><em>in one place.</em></h1><p>A calmer way to handle product orders, reservations and payment records — made for independent businesses.</p><div className="story-stats"><div><strong>01</strong><span>One shareable store</span></div><div><strong>02</strong><span>Clear order statuses</span></div><div><strong>03</strong><span>Payments tracked</span></div></div></div><div className="story-footer">ORDERPING · BUILT FOR THE WAY YOU SELL</div></section><section className="auth-panel"><div className="auth-panel-inner"><div className="mobile-brand"><Brand /></div><span className="eyebrow">{mode === "login" ? "WELCOME BACK" : "GET STARTED"}</span><h2>{mode === "login" ? "Sign in to your store" : "Create your account"}</h2><p className="auth-subtitle">{mode === "login" ? "Your business is waiting for you." : "Set up your workspace to start managing orders."}</p><button type="button" className="button secondary full" disabled={busy || googleBusy} onClick={() => void signInWithGoogle()}>{googleBusy ? <LoaderCircle className="spin" size={17} /> : <span className="google-mark" aria-hidden="true">G</span>}Continue with Google</button><div className="auth-divider"><span>or continue with email</span></div><form className="form-stack" onSubmit={submit}><label>Email address<input type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@business.com" /></label><label>Password<div className="password-field"><input type={showPassword ? "text" : "password"} autoComplete={mode === "login" ? "current-password" : "new-password"} minLength={8} required value={password} onChange={e => setPassword(e.target.value)} placeholder="At least 8 characters" /><button className="icon-button password-toggle" type="button" aria-label="Toggle password visibility" onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button></div></label>{error && <div className="inline-alert error">{error}</div>}<button className="button primary full" disabled={busy || googleBusy}>{busy ? <LoaderCircle className="spin" size={17} /> : null}{mode === "login" ? "Sign in" : "Create account"}<ArrowRight size={16} /></button></form><p className="auth-switch">{mode === "login" ? "New to OrderPing?" : "Already have an account?"} <button onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(""); }}>{mode === "login" ? "Create an account" : "Sign in"}</button></p><p className="auth-legal">Keep your customers’ information secure and use strong account credentials.</p></div></section></div>;
+  return <div className="auth-page">
+    <section className="auth-story">
+      <Brand light />
+      <div className="story-content">
+        <span className="eyebrow light-eyebrow">YOUR BUSINESS, LESS SCATTERED</span>
+        <h1>Make space for<br /><em>the next order.</em></h1>
+        <p>Bring your catalogue, customer requests and payment records into one calm, focused workspace.</p>
+        <div className="auth-benefits">
+          <div><span><CheckCircle2 size={17} /></span><div><strong>A storefront worth sharing</strong><small>One simple link for your customers</small></div></div>
+          <div><span><CheckCircle2 size={17} /></span><div><strong>Orders without the guesswork</strong><small>See status, customer and fulfilment</small></div></div>
+          <div><span><CheckCircle2 size={17} /></span><div><strong>Payments tracked clearly</strong><small>Know what came in and what remains</small></div></div>
+        </div>
+      </div>
+      <div className="story-footer">ORDERPING · ORDERS MADE SIMPLER</div>
+    </section>
+    <section className="auth-panel">
+      <div className="auth-panel-inner">
+        <div className="auth-back"><Link to="/" className="back-home"><ArrowRight size={14} /> Back to home</Link><div className="mobile-brand"><Brand /></div></div>
+        <span className="eyebrow">{mode === "login" ? "VENDOR WORKSPACE" : "START SELLING WITH ORDERPING"}</span>
+        <h2>{mode === "login" ? "Welcome back." : "Create your account."}</h2>
+        <p className="auth-subtitle">{mode === "login" ? "Sign in to manage your store and customer orders." : "Set up your vendor account to create a shareable storefront."}</p>
+        <div className="auth-mode-tabs" role="tablist" aria-label="Account access">
+          <button type="button" role="tab" aria-selected={mode === "login"} className={mode === "login" ? "active" : ""} onClick={() => { setMode("login"); setError(""); }}>Sign in</button>
+          <button type="button" role="tab" aria-selected={mode === "signup"} className={mode === "signup" ? "active" : ""} onClick={() => { setMode("signup"); setError(""); }}>Create account</button>
+        </div>
+        <form className="form-stack auth-form" onSubmit={submit}>
+          <label>Email address<input type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@business.com" /></label>
+          <label>Password<div className="password-field"><input type={showPassword ? "text" : "password"} autoComplete={mode === "login" ? "current-password" : "new-password"} minLength={8} required value={password} onChange={e => setPassword(e.target.value)} placeholder="At least 8 characters" /><button className="icon-button password-toggle" type="button" aria-label="Toggle password visibility" onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button></div><span className="field-hint">Use at least 8 characters.</span></label>
+          {error && <div className={mode === "signup" && error.startsWith("Account created.") ? "inline-alert info" : "inline-alert error"}>{error}</div>}
+          <button className="button primary full auth-submit" disabled={busy}>{busy ? <LoaderCircle className="spin" size={17} /> : null}{mode === "login" ? "Sign in to OrderPing" : "Create vendor account"}<ArrowRight size={16} /></button>
+        </form>
+        <div className="auth-security-note"><span><CheckCircle2 size={16} /></span><p>Your account is private. Customers can still browse your store and order as guests.</p></div>
+        <p className="auth-legal">By continuing, you agree to use OrderPing responsibly and keep account credentials secure.</p>
+      </div>
+    </section>
+  </div>;
 }
-
 const navItems = [
   { label: "Overview", path: "/app", icon: LayoutDashboard, exact: true },
   { label: "Orders", path: "/app/orders", icon: ShoppingCart },
