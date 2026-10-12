@@ -61,7 +61,22 @@ function AuthScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
   const navigate = useNavigate();
+  async function signInWithGoogle() {
+    if (!supabase) return;
+    setGoogleBusy(true); setError("");
+    try {
+      const { error: authError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/app`,
+          queryParams: { prompt: "select_account" },
+        },
+      });
+      if (authError) throw authError;
+    } catch (err) { setError(messageFromError(err)); setGoogleBusy(false); }
+  }
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (!supabase) return;
@@ -80,7 +95,7 @@ function AuthScreen() {
     } catch (err) { setError(messageFromError(err)); }
     finally { setBusy(false); }
   }
-  return <div className="auth-page"><section className="auth-story"><Brand light /><div className="story-content"><span className="eyebrow light-eyebrow">LESS ADMIN. MORE BUSINESS.</span><h1>Every order,<br /><em>in one place.</em></h1><p>A calmer way to handle product orders, reservations and payment records — made for independent businesses.</p><div className="story-stats"><div><strong>01</strong><span>One shareable store</span></div><div><strong>02</strong><span>Clear order statuses</span></div><div><strong>03</strong><span>Payments tracked</span></div></div></div><div className="story-footer">ORDERPING · BUILT FOR THE WAY YOU SELL</div></section><section className="auth-panel"><div className="auth-panel-inner"><div className="mobile-brand"><Brand /></div><span className="eyebrow">{mode === "login" ? "WELCOME BACK" : "GET STARTED"}</span><h2>{mode === "login" ? "Sign in to your store" : "Create your account"}</h2><p className="auth-subtitle">{mode === "login" ? "Your business is waiting for you." : "Set up your workspace to start managing orders."}</p><form className="form-stack" onSubmit={submit}><label>Email address<input type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@business.com" /></label><label>Password<div className="password-field"><input type={showPassword ? "text" : "password"} autoComplete={mode === "login" ? "current-password" : "new-password"} minLength={8} required value={password} onChange={e => setPassword(e.target.value)} placeholder="At least 8 characters" /><button className="icon-button password-toggle" type="button" aria-label="Toggle password visibility" onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button></div></label>{error && <div className="inline-alert error">{error}</div>}<button className="button primary full" disabled={busy}>{busy ? <LoaderCircle className="spin" size={17} /> : null}{mode === "login" ? "Sign in" : "Create account"}<ArrowRight size={16} /></button></form><p className="auth-switch">{mode === "login" ? "New to OrderPing?" : "Already have an account?"} <button onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(""); }}>{mode === "login" ? "Create an account" : "Sign in"}</button></p><p className="auth-legal">Keep your customers’ information secure and use strong account credentials.</p></div></section></div>;
+  return <div className="auth-page"><section className="auth-story"><Brand light /><div className="story-content"><span className="eyebrow light-eyebrow">LESS ADMIN. MORE BUSINESS.</span><h1>Every order,<br /><em>in one place.</em></h1><p>A calmer way to handle product orders, reservations and payment records — made for independent businesses.</p><div className="story-stats"><div><strong>01</strong><span>One shareable store</span></div><div><strong>02</strong><span>Clear order statuses</span></div><div><strong>03</strong><span>Payments tracked</span></div></div></div><div className="story-footer">ORDERPING · BUILT FOR THE WAY YOU SELL</div></section><section className="auth-panel"><div className="auth-panel-inner"><div className="mobile-brand"><Brand /></div><span className="eyebrow">{mode === "login" ? "WELCOME BACK" : "GET STARTED"}</span><h2>{mode === "login" ? "Sign in to your store" : "Create your account"}</h2><p className="auth-subtitle">{mode === "login" ? "Your business is waiting for you." : "Set up your workspace to start managing orders."}</p><button type="button" className="button secondary full" disabled={busy || googleBusy} onClick={() => void signInWithGoogle()}>{googleBusy ? <LoaderCircle className="spin" size={17} /> : <span className="google-mark" aria-hidden="true">G</span>}Continue with Google</button><div className="auth-divider"><span>or continue with email</span></div><form className="form-stack" onSubmit={submit}><label>Email address<input type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@business.com" /></label><label>Password<div className="password-field"><input type={showPassword ? "text" : "password"} autoComplete={mode === "login" ? "current-password" : "new-password"} minLength={8} required value={password} onChange={e => setPassword(e.target.value)} placeholder="At least 8 characters" /><button className="icon-button password-toggle" type="button" aria-label="Toggle password visibility" onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button></div></label>{error && <div className="inline-alert error">{error}</div>}<button className="button primary full" disabled={busy || googleBusy}>{busy ? <LoaderCircle className="spin" size={17} /> : null}{mode === "login" ? "Sign in" : "Create account"}<ArrowRight size={16} /></button></form><p className="auth-switch">{mode === "login" ? "New to OrderPing?" : "Already have an account?"} <button onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(""); }}>{mode === "login" ? "Create an account" : "Sign in"}</button></p><p className="auth-legal">Keep your customers’ information secure and use strong account credentials.</p></div></section></div>;
 }
 
 const navItems = [
