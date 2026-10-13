@@ -1,0 +1,19 @@
+name: Frontend build
+
+on:
+  pull_request:
+    branches: [stage-1-foundation]
+  push:
+    branches: [frontend/v1-customer-pilot]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - run: npm install
+      - run: npm run build
