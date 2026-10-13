@@ -118,3 +118,5 @@ input,textarea,select{width:100%;border:1px solid #dfe4ee;background:#fff;color:
 .landing-contact-form .field-hint{margin:0;line-height:1.5}
 .landing-footer a[href^='https://wa.me']{color:#16875b;font-weight:700}
 @media(max-width:680px){.landing-contact{grid-template-columns:1fr;padding:42px 20px 52px;gap:24px}.landing-contact-form{padding:17px}.landing-contact-copy h2{font-size:27px}}
+
+.product-image-preview{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.product-image-preview img{width:112px;height:112px;object-fit:cover;border-radius:12px;border:1px solid var(--line)}.store-product-art img{width:100%;height:100%;object-fit:cover;display:block}.store-product-art{overflow:hidden}
