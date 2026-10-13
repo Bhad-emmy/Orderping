@@ -14,7 +14,7 @@ Deno.serve(async (req: Request) => {
     const {data:business,error} = await db.from("businesses").select("id,name,slug").eq("slug",slug).maybeSingle();
     if (error) return json({error:"Store could not be loaded."},500);
     if (!business) return json({error:"This store could not be found."},404);
-    const {data:products,error:productError} = await db.from("catalog_items").select("id,business_id,type,name,description,price_minor,is_active,created_at").eq("business_id",business.id).eq("type","product").eq("is_active",true).order("created_at",{ascending:false});
+    const {data:products,error:productError} = await db.from("catalog_items").select("id,business_id,type,name,description,price_minor,image_url,is_active,created_at").eq("business_id",business.id).eq("type","product").eq("is_active",true).order("created_at",{ascending:false});
     if (productError) return json({error:"Products could not be loaded."},500);
     return json({business:{name:business.name,slug:business.slug},products:products||[]});
   } catch { return json({error:"Store could not be loaded."},500); }
