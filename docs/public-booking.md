@@ -1,18 +1,23 @@
 # Public appointment booking
 
-- Public route: `/book/:slug`, linked from a business storefront.
-- Supports service listings, durations/prices, business hours, customer contact details, and appointment requests.
-- Uses the `public-booking` Supabase Edge Function; the service-role key stays server-side.
-- Appointment inserts use the existing overlap-protection database trigger, so simultaneous requests for the same time cannot both be accepted.
-- Requests are created as `pending`; the business must confirm them in its appointment management workflow.
+OrderPing's shared appointment-booking feature is designed for any appointment-based or service business—not a salon-specific product. Examples include salons, barbershops, spas, consultants, repair services, photographers, tutors, and other providers.
+
+- Public route: `/book/:slug`, linked from each business storefront.
+- Each business sees its own active services, prices, durations, opening hours, and appointments.
+- Customers can request an appointment without creating an OrderPing account.
+- The `public-booking` Supabase Edge Function validates requests, rate-limits public traffic, checks business-local opening hours, and writes appointment requests.
+- Existing database overlap protection prevents two active appointments from occupying the same business time slot.
+- Requests are created as `pending`; the business must confirm or cancel them.
 - This page does not collect customer payments or promise immediate confirmation.
-- Booking availability is derived from the business's configured `business_hours`. Owners must configure service items and opening hours before publishing the link.
-- Deploy `public-booking` before using the route in a deployed frontend.
+- Business owners must configure service items and opening hours before sharing their booking link.
+- Deploy `public-booking` before using the route in production.
 
-## Pilot salon checklist
+## Pilot rollout
 
-1. Confirm the salon business profile and slug.
-2. Add each bookable service to the catalogue with a duration and price.
-3. Set opening/closing times for each weekday and mark closed days.
+One of the five free pilot businesses happens to be a salon and can be used as the first real-world tester. The same booking feature remains available to all eligible OrderPing service businesses.
+
+1. Confirm each pilot business profile and slug.
+2. Add bookable services with duration and price.
+3. Configure opening/closing times for each weekday and mark closed days.
 4. Share `https://orderping.vercel.app/book/<business-slug>` after the frontend and Edge Function are deployed.
-5. Review incoming appointment requests and confirm or cancel them from the vendor workflow.
+5. Review and manage requests from the vendor appointment dashboard. The appointment review/confirmation UI must be completed before this workflow is end-to-end ready.
