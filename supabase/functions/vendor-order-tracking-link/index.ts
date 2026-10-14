@@ -116,7 +116,7 @@ Deno.serve(async (req: Request) => {
     let emailNotification = "not_requested";
     const resendKey = Deno.env.get("RESEND_API_KEY");
     if (order.customer_email && resendKey) {
-      const siteUrl = (Deno.env.get("ORDERPING_SITE_URL") || "https://orderping.vercel.app").replace(/\\/$/, "");
+      const siteUrl = (Deno.env.get("ORDERPING_SITE_URL") || "https://orderping.vercel.app").replace(/\/$/, "");
       const trackingUrl = siteUrl + "/store/" + encodeURIComponent(business.slug) + "?track=" + encodeURIComponent(token);
       const from = Deno.env.get("RESEND_FROM_EMAIL") || "OrderPing <onboarding@resend.dev>";
       try {
