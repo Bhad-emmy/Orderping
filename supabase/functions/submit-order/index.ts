@@ -29,25 +29,11 @@ Deno.serve(async(req:Request)=>{
   const total=lines.reduce((s,l)=>s+l.quantity*l.unit_price_minor,0);if(!Number.isSafeInteger(total)||total<0||lines.some(l=>!Number.isSafeInteger(l.unit_price_minor)||!Number.isSafeInteger(l.quantity*l.unit_price_minor)))return json({error:"Order total is invalid."},400);
   const idem=text(req.headers.get("x-idempotency-key"),128);if(idem&&!/^[a-zA-Z0-9._:-]{8,128}$/.test(idem))return json({error:"Request identifier is invalid."},400);
   if(idem){const {data:old}=await db.from("orders").select("id,status,total_amount_minor").eq("business_id",business.id).eq("idempotency_key",idem).maybeSingle();if(old)return json({success:true,duplicate:true,request:old});}
-  const accessToken=[...crypto.getRandomValues(new Uint8Array(32))].map(x=>x.toString(16).padStart(2,"0")).join("");const accessTokenHash=await hash(accessToken);
-  const {data:order,error:oe}=await db.from("orders").insert({business_id:business.id,customer_name:name,customer_phone:phone,customer_email:email,customer_note:note,fulfilment_method:fulfilment,total_amount_minor:total,amount_paid_minor:0,currency_code:"NGN",status:"new",order_type:"order",requested_pickup_at:null,idempotency_key:idem||null,customer_access_token_hash:accessTokenHash}).select("id,status,total_amount_minor,created_at").single();
+  const {data:order,error:oe}=await db.from("orders").insert({business_id:business.id,customer_name:name,customer_phone:phone,customer_email:email,customer_note:note,fulfilment_method:fulfilment,total_amount_minor:total,amount_paid_minor:0,currency_code:"NGN",status:"new",order_type:"order",requested_pickup_at:null,idempotency_key:idem||null,customer_access_token_hash:null}).select("id,status,total_amount_minor,created_at").single();
   if(oe||!order)return json({error:"Your order could not be saved. Please try again."},500);
   const {error:ie}=await db.from("order_items").insert(lines.map(l=>({...l,order_id:order.id})));
   if(ie){await db.from("orders").delete().eq("id",order.id).eq("business_id",business.id);return json({error:"Your order could not be completed. Please try again."},500);}
-  // Email is best-effort: a mail provider outage must never undo a successfully saved order.
-  let emailNotification="not_requested";
-  const resendKey=Deno.env.get("RESEND_API_KEY");
-  const siteUrl=(Deno.env.get("ORDERPING_SITE_URL")||"https://orderping.vercel.app").replace(/\/$/,"");
-  const trackingUrl=siteUrl+"/store/"+encodeURIComponent(slug)+"?track="+encodeURIComponent(accessToken);
-  if(email&&resendKey){
-   const escapeHtml=(value:string)=>value.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
-   const from=Deno.env.get("RESEND_FROM_EMAIL")||"OrderPing <onboarding@resend.dev>";
-   const itemHtml=lines.map(line=>`<li>${escapeHtml(line.item_name)} × ${line.quantity} — ${(line.quantity*line.unit_price_minor/100).toLocaleString("en-NG",{style:"currency",currency:"NGN"})}</li>`).join("");
-   try{
-    const mail=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":"Bearer "+resendKey,"Content-Type":"application/json"},body:JSON.stringify({from,to:[email],subject:"Order confirmation — OrderPing #"+order.id.slice(0,8).toUpperCase(),html:`<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#182230"><h1>Thanks for your order, ${escapeHtml(name)}.</h1><p>Your order has been received by the store.</p><p><strong>Order reference:</strong> #${order.id.slice(0,8).toUpperCase()}</p><p><strong>Order total:</strong> ${(total/100).toLocaleString("en-NG",{style:"currency",currency:"NGN"})}</p><h2>Items</h2><ul>${itemHtml}</ul><p>Use the private link below to check order status, payment history and outstanding balance.</p><p><a href="${trackingUrl}" style="display:inline-block;padding:12px 18px;background:#171923;color:#fff;text-decoration:none;border-radius:8px">Track my order and balance</a></p><p style="font-size:12px;color:#667085">Keep this private link safe. Anyone with it can view this order. OrderPing does not collect payments; the store records payments.</p></div>`})});
-    if(mail.ok)emailNotification="sent";else {emailNotification="failed";console.error("Order confirmation email failed",mail.status,(await mail.text()).slice(0,500));}
-   }catch(err){emailNotification="failed";console.error("Order confirmation email request failed",String(err).slice(0,300));}
-  }else if(email&&!resendKey){emailNotification="not_configured";}
-  return json({success:true,request:order,customer_access_token:accessToken,email_notification:emailNotification},201);
+  // Do not issue or email a tracking link until the vendor confirms the order and at least one payment is recorded.
+  return json({success:true,request:order,tracking_status:"awaiting_vendor_confirmation_and_payment"},201);
  }catch{return json({error:"Your order could not be submitted. Please try again."},500);}
 });
