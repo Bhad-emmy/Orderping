@@ -4,6 +4,7 @@ import { Activity, ArrowRight, Bell, CalendarDays, Check, CheckCircle2, ChevronD
 import type { Session, User } from "@supabase/supabase-js";
 import { formatNaira, isSupabaseConfigured, messageFromError, supabase } from "./lib/supabase";
 import PublicBookingPage from "./PublicBookingPage";
+import AppointmentsPage from "./AppointmentsPage";
 
 type Business = { id: string; owner_id: string; name: string; slug: string; business_type: string; email: string | null; whatsapp_number: string | null; timezone: string };
 type Product = { id: string; business_id: string; type: string; name: string; description: string | null; price_minor: number; original_price_minor?: number | null; image_url?: string | null; is_active: boolean; created_at?: string };
@@ -213,6 +214,7 @@ const navItems = [
   { label: "Overview", path: "/app", icon: LayoutDashboard, exact: true },
   { label: "Orders", path: "/app/orders", icon: ShoppingCart },
   { label: "Reservations", path: "/app/reservations", icon: ClipboardList },
+  { label: "Appointments", path: "/app/appointments", icon: CalendarDays },
   { label: "Products", path: "/app/products", icon: Package },
   { label: "Payments", path: "/app/payments", icon: Wallet },
 ];
@@ -367,7 +369,7 @@ function VendorApp({ user }: { user: User }) {
   }
 
   const path = location.pathname;
-  const pageTitle = path.includes("/products") ? "Products" : path.includes("/orders") ? "Orders" : path.includes("/reservations") ? "Reservations" : path.includes("/payments") ? "Payments" : path.includes("/settings") ? "Store settings" : "Overview";
+  const pageTitle = path.includes("/products") ? "Products" : path.includes("/orders") ? "Orders" : path.includes("/appointments") ? "Appointments" : path.includes("/reservations") ? "Reservations" : path.includes("/payments") ? "Payments" : path.includes("/settings") ? "Store settings" : "Overview";
   if (loading && !business && !pageError) return <FullLoader label="Loading your workspace…" />;
   if (!business) return <div className="onboarding-page"><div className="onboarding-top"><Brand /><button className="button ghost" onClick={signOut}><LogOut size={16} /> Sign out</button></div><div className="onboarding-card"><div className="onboarding-icon"><Store size={26} /></div><span className="eyebrow">YOUR FIRST STORE</span><h1>Let’s get your store ready.</h1><p>Add your business details to create a shareable product catalogue and start managing customer orders.</p><form className="form-stack" onSubmit={createBusiness}><label>Business name<input required maxLength={120} value={businessForm.name} onChange={e => { const name = e.target.value; setBusinessForm(v => ({ ...v, name, slug: v.slug || name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") })); }} placeholder="e.g. Ada's Essentials" /></label><label>Store link<input required maxLength={50} value={businessForm.slug} onChange={e => setBusinessForm(v => ({ ...v, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") }))} placeholder="adas-essentials" /><span className="field-hint">Customers will use /store/{businessForm.slug || "your-store-name"}</span></label><label>Business email (optional)<input type="email" value={businessForm.email} onChange={e => setBusinessForm(v => ({ ...v, email: e.target.value }))} placeholder="hello@business.com" /></label><label>WhatsApp number (optional)<input type="tel" value={businessForm.whatsapp} onChange={e => setBusinessForm(v => ({ ...v, whatsapp: e.target.value }))} placeholder="+234…" /></label>{pageError && <div className="inline-alert error">{pageError}</div>}<button className="button primary full" disabled={saving}>{saving ? <LoaderCircle className="spin" size={17} /> : <Plus size={17} />} Create my store <ArrowRight size={16} /></button></form></div></div>;
 
@@ -381,6 +383,7 @@ function VendorApp({ user }: { user: User }) {
         <Route path="products" element={<ProductsPage products={products} search={search} setSearch={setSearch} onAdd={() => openProduct()} onEdit={openProduct} onToggle={toggleProduct} />} />
         <Route path="orders" element={<OrdersPage orders={filteredOrders} search={search} setSearch={setSearch} onStatus={updateOrder} onReissue={reissueOrderTracking} onPayment={order => { setPaymentOrder(order); setPaymentValue(""); setPaymentReference(""); setPaymentNote(""); setPaymentMethod("bank_transfer"); }} />} />
         <Route path="reservations" element={<ReservationsPage reservations={reservations} unavailable={reservationUnavailable} onStatus={reservationAction} />} />
+        <Route path="appointments" element={<AppointmentsPage user={user} />} />
         <Route path="payments" element={<PaymentsPage orders={orders} payments={paymentRecords} onRecord={order => { setPaymentOrder(order); setPaymentValue(""); setPaymentReference(""); setPaymentNote(""); setPaymentMethod("bank_transfer"); }} />} />
         <Route path="settings" element={<SettingsPage business={business} productsCount={products.length} />} />
         <Route path="*" element={<NotFound />} />
