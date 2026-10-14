@@ -35,6 +35,16 @@ Deno.serve(async (req: Request) => {
     if (authError || !authData.user) return json({ error: "Your session is invalid or expired. Sign in again." }, 401);
 
     const db = createClient(url, serviceKey, { db: { schema: "orderping" }, auth: { persistSession: false, autoRefreshToken: false } });
+    const rateBucket = await hash("activate-tracking:user:" + authData.user.id);
+    const { data: rateData, error: rateError } = await db.rpc("consume_rate_limit", {
+      p_bucket_key: rateBucket,
+      p_limit: 20,
+      p_window_seconds: 60,
+    });
+    if (rateError) return json({ error: "Tracking service is temporarily unavailable." }, 503);
+    const rate = Array.isArray(rateData) ? rateData[0] : rateData;
+    if (!rate?.allowed) return json({ error: "Too many requests. Wait a minute and try again." }, 429);
+
     const { data: business, error: businessError } = await db.from("businesses").select("id,owner_id,name,slug").eq("id", businessId).maybeSingle();
     if (businessError) return json({ error: "Business could not be verified." }, 500);
     if (!business || business.owner_id !== authData.user.id) return json({ error: "You are not allowed to activate tracking for this business." }, 403);
