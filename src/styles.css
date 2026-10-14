@@ -268,3 +268,11 @@ input,textarea,select{width:100%;border:1px solid #dfe4ee;background:#fff;color:
 .booking-summary span{font-size:12px;color:#777f90}.booking-summary strong{font-size:13px;overflow-wrap:anywhere}
 .store-booking-cta{display:flex;justify-content:center;margin-top:18px}
 @media(max-width:560px){.public-booking-page{padding-left:13px;padding-right:13px}.booking-date-grid{grid-template-columns:1fr}.booking-topbar{padding:17px 0}.booking-summary{grid-template-columns:1fr}.booking-summary>div,.booking-summary>div:nth-child(odd){border-right:0;border-bottom:1px solid #e8ebf2}.booking-summary>div:last-child{border-bottom:0}}
+
+/* Vendor appointment management */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:24px}
+.page-header h1{margin:6px 0 8px;font-size:clamp(1.65rem,3vw,2.2rem);letter-spacing:-.04em}
+.page-header p{margin:0;color:var(--muted,#697386);line-height:1.55}
+.page-header>.button{flex-shrink:0}
+.bottom-note a{color:var(--primary,#4457d9);overflow-wrap:anywhere}
+@media(max-width:640px){.page-header{flex-direction:column}.page-header>.button{width:100%;justify-content:center}}
