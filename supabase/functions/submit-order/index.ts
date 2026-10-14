@@ -34,6 +34,20 @@ Deno.serve(async(req:Request)=>{
   if(oe||!order)return json({error:"Your order could not be saved. Please try again."},500);
   const {error:ie}=await db.from("order_items").insert(lines.map(l=>({...l,order_id:order.id})));
   if(ie){await db.from("orders").delete().eq("id",order.id).eq("business_id",business.id);return json({error:"Your order could not be completed. Please try again."},500);}
-  return json({success:true,request:order,customer_access_token:accessToken},201);
+  // Email is best-effort: a mail provider outage must never undo a successfully saved order.
+  let emailNotification="not_requested";
+  const resendKey=Deno.env.get("RESEND_API_KEY");
+  const siteUrl=(Deno.env.get("ORDERPING_SITE_URL")||"https://orderping.vercel.app").replace(/\/$/,"");
+  const trackingUrl=siteUrl+"/store/"+encodeURIComponent(slug)+"?track="+encodeURIComponent(accessToken);
+  if(email&&resendKey){
+   const escapeHtml=(value:string)=>value.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+   const from=Deno.env.get("RESEND_FROM_EMAIL")||"OrderPing <onboarding@resend.dev>";
+   const itemHtml=lines.map(line=>`<li>${escapeHtml(line.item_name)} × ${line.quantity} — ${(line.quantity*line.unit_price_minor/100).toLocaleString("en-NG",{style:"currency",currency:"NGN"})}</li>`).join("");
+   try{
+    const mail=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":"Bearer "+resendKey,"Content-Type":"application/json"},body:JSON.stringify({from,to:[email],subject:"Order confirmation — OrderPing #"+order.id.slice(0,8).toUpperCase(),html:`<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#182230"><h1>Thanks for your order, ${escapeHtml(name)}.</h1><p>Your order has been received by the store.</p><p><strong>Order reference:</strong> #${order.id.slice(0,8).toUpperCase()}</p><p><strong>Order total:</strong> ${(total/100).toLocaleString("en-NG",{style:"currency",currency:"NGN"})}</p><h2>Items</h2><ul>${itemHtml}</ul><p>Use the private link below to check order status, payment history and outstanding balance.</p><p><a href="${trackingUrl}" style="display:inline-block;padding:12px 18px;background:#171923;color:#fff;text-decoration:none;border-radius:8px">Track my order and balance</a></p><p style="font-size:12px;color:#667085">Keep this private link safe. Anyone with it can view this order. OrderPing does not collect payments; the store records payments.</p></div>`})});
+    if(mail.ok)emailNotification="sent";else {emailNotification="failed";console.error("Order confirmation email failed",mail.status,(await mail.text()).slice(0,500));}
+   }catch(err){emailNotification="failed";console.error("Order confirmation email request failed",String(err).slice(0,300));}
+  }else if(email&&!resendKey){emailNotification="not_configured";}
+  return json({success:true,request:order,customer_access_token:accessToken,email_notification:emailNotification},201);
  }catch{return json({error:"Your order could not be submitted. Please try again."},500);}
 });
