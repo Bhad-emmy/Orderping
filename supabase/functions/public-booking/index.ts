@@ -59,18 +59,25 @@ Deno.serve(async (req: Request) => {
     const email = text(body?.customer_email, 254) || null;
     const note = text(body?.customer_note, 500) || null;
     const startsAt = typeof body?.starts_at === "string" ? Date.parse(body.starts_at) : NaN;
-    if (!uuid(serviceId) || !name || !/^[+0-9() .-]{5,32}$/.test(phone)) return json({ error: "Enter your name, phone number, and select a service." }, 400);
+    if ((serviceId && !uuid(serviceId)) || !name || !/^[+0-9() .-]{5,32}$/.test(phone)) return json({ error: "Enter your name and phone number." }, 400);
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: "Enter a valid email address." }, 400);
     if (!Number.isFinite(startsAt) || startsAt < Date.now() + 60_000 || startsAt > Date.now() + 90 * 24 * 60 * 60 * 1000) {
       return json({ error: "Choose an appointment time within the next 90 days." }, 400);
     }
-    const { data: service, error: serviceError } = await db.from("catalog_items")
-      .select("id,name,price_minor,duration_minutes")
-      .eq("id", serviceId).eq("business_id", business.id).eq("type", "service").eq("is_active", true).maybeSingle();
-    if (serviceError) return json({ error: "Service could not be checked." }, 500);
-    if (!service) return json({ error: "That service is no longer available." }, 400);
+    // A service and price are optional: businesses may quote after assessing the work in person.
+    let service: { id: string; name: string; price_minor: number | null; duration_minutes: number | null } | null = null;
+    if (serviceId) {
+      if (!uuid(serviceId)) return json({ error: "Service selection is invalid." }, 400);
+      const { data, error: serviceError } = await db.from("catalog_items")
+        .select("id,name,price_minor,duration_minutes")
+        .eq("id", serviceId).eq("business_id", business.id).eq("type", "service").eq("is_active", true).maybeSingle();
+      if (serviceError) return json({ error: "Service could not be checked." }, 500);
+      if (!data) return json({ error: "That service is no longer available." }, 400);
+      service = data;
+    }
+    const durationMinutes = Number(service?.duration_minutes) > 0 ? Number(service?.duration_minutes) : 30;
     const start = new Date(startsAt);
-    const end = new Date(startsAt + Number(service.duration_minutes) * 60_000);
+    const end = new Date(startsAt + durationMinutes * 60_000);
     const businessTimezone = text(business.timezone, 80) || "Africa/Lagos";
     const localParts = (d: Date) => {
       const parts = new Intl.DateTimeFormat("en-GB", {
@@ -93,9 +100,9 @@ Deno.serve(async (req: Request) => {
       return json({ error: "Choose a time within the business opening hours." }, 400);
     }
     const { data: appointment, error: insertError } = await db.from("appointments").insert({
-      business_id: business.id, catalog_item_id: service.id, customer_name: name, customer_phone: phone,
+      business_id: business.id, catalog_item_id: service?.id ?? null, customer_name: name, customer_phone: phone,
       customer_email: email, customer_note: note, starts_at: start.toISOString(), ends_at: end.toISOString(),
-      status: "pending", total_amount_minor: Number(service.price_minor), amount_paid_minor: 0, currency_code: "NGN",
+      status: "pending", total_amount_minor: service ? Number(service.price_minor) : null, amount_paid_minor: 0, currency_code: "NGN",
     }).select("id,status,starts_at,ends_at,total_amount_minor,created_at").single();
     if (insertError) {
       if (insertError.code === "23P01" || /slot is no longer available|overlap/i.test(insertError.message || "")) {
@@ -103,7 +110,7 @@ Deno.serve(async (req: Request) => {
       }
       return json({ error: "Your appointment could not be saved. Please try another time." }, 500);
     }
-    return json({ success: true, appointment: { ...appointment, service_name: service.name }, business: { name: business.name } }, 201);
+    return json({ success: true, appointment: { ...appointment, service_name: service?.name ?? "Price agreed at location" }, business: { name: business.name } }, 201);
   } catch {
     return json({ error: "Booking could not be completed. Please try again." }, 500);
   }
