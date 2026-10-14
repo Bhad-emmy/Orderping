@@ -10,8 +10,7 @@ Deno.serve(async (req: Request) => {
     const url = Deno.env.get("SUPABASE_URL"), key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     if (!url || !key) return json({error:"Server configuration is incomplete."},503);
     const db = createClient(url,key,{db:{schema:"orderping"},auth:{persistSession:false,autoRefreshToken:false}});
-    const forwarded = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim();
-    const clientIp = forwarded || req.headers.get("cf-connecting-ip") || "unknown";
+    const clientIp = req.headers.get("cf-connecting-ip") || "unknown";
     const ipDigest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("storefront:" + clientIp));
     const bucket = [...new Uint8Array(ipDigest)].map((b) => b.toString(16).padStart(2,"0")).join("");
     const {data:rateData,error:rateError} = await db.rpc("consume_rate_limit",{p_bucket_key:bucket,p_limit:60,p_window_seconds:60});
