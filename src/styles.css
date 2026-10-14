@@ -167,6 +167,9 @@ input,textarea,select{width:100%;border:1px solid #dfe4ee;background:#fff;color:
 .customer-order-link-copy h2{font-size:20px;margin:0 0 7px}
 .customer-order-link-copy p{font-size:12px;margin:0 0 15px;max-width:650px}
 .customer-order-link-copy .button{margin:0 8px 8px 0}
+.customer-order-link-actions{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 5px}
+.customer-order-link-actions .button{margin:0}
+.customer-order-link-copy .field-hint{margin:4px 0 0;font-size:11px;color:#68738a}
 .customer-order-link-url{max-width:100%;overflow-wrap:anywhere;font-size:11px;color:#68738a;background:#f7f8fc;border:1px solid #e9ecf3;padding:10px 12px;border-radius:8px;margin:0 0 10px}
 .customer-order-page{min-height:100vh;background:#f7f8fc}
 .customer-order-content{width:min(100% - 32px,760px);margin:0 auto;padding:34px 0 54px}
@@ -213,3 +216,19 @@ input,textarea,select{width:100%;border:1px solid #dfe4ee;background:#fff;color:
 .customer-order-empty h1{font-size:24px}
 .customer-order-empty p{font-size:12px}
 @media(max-width:560px){.customer-order-link-card{padding:18px;gap:12px}.customer-order-link-icon{width:37px;height:37px}.customer-order-metrics{gap:8px;padding:16px 14px 13px}.customer-order-metrics span{font-size:10px}.customer-order-metrics strong{font-size:17px}.customer-order-panel-heading{padding:16px}.customer-payment-progress{padding:0 14px 15px}.customer-order-meta{padding:11px 16px}.customer-order-items{padding:2px 16px}.customer-order-total{padding:14px 16px}.customer-payment-history{padding:0 16px}.customer-payment-note{margin:0 16px 16px}.customer-order-content{padding-top:25px}}
+
+
+/* Unified storefront order tracking */
+.store-track-order{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,.95fr);align-items:center;gap:18px;margin:0 0 24px;padding:20px 22px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 3px 12px #202c4805}
+.store-track-order h2{font-size:18px;margin:5px 0 6px}.store-track-order p{font-size:11px;line-height:1.55;margin:0;color:var(--muted)}
+.store-track-order form{display:flex;gap:8px;min-width:0}.store-track-order input{min-width:0;flex:1;height:42px;padding:0 12px;border:1px solid #e1e5ef;border-radius:9px;background:#fbfcff;font-size:11px}
+.store-track-order .button{white-space:nowrap}.store-track-order .inline-alert{grid-column:1/-1;margin:0}
+.store-tracked-order{margin:0 0 27px;padding:22px;background:#fff;border:1px solid #dfe5ff;border-radius:15px;box-shadow:0 8px 25px #3447a30a}
+.store-tracked-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px}.store-tracked-heading h2{font-size:21px;margin:5px 0}.store-tracked-heading p{font-size:11px;line-height:1.55;margin:0;color:var(--muted)}
+.store-tracked-actions{display:flex;align-items:center;gap:7px;flex-shrink:0}.store-tracked-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:18px;background:#f8f9ff;border:1px solid #edf0ff;border-radius:11px}
+.store-tracked-metrics>div{display:flex;flex-direction:column;gap:7px;min-width:0}.store-tracked-metrics span{font-size:11px;color:#7a859b}.store-tracked-metrics strong{font:800 20px Manrope;letter-spacing:-.04em;color:#303b52;overflow-wrap:anywhere}
+.store-tracked-status{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:15px 0;color:#7c879b;font-size:10px}
+.store-tracked-details{border-top:1px solid #edf0f6;padding-top:13px}.store-tracked-details summary{cursor:pointer;font-size:11px;font-weight:700;color:var(--blue);padding:4px 0 12px}
+.store-tracked-details .customer-order-items{padding:0}.store-tracked-details .customer-order-total{padding:13px 0;background:transparent;border-top:1px solid #f0f2f7}.store-tracked-details .customer-payment-history{padding:0}.store-tracked-details .customer-no-payments{padding:10px 0}
+.store-tracked-order>.full-loader{min-height:100px}
+@media(max-width:700px){.store-track-order{grid-template-columns:1fr;padding:17px;gap:13px}.store-track-order form{flex-direction:column}.store-track-order form .button{width:100%;justify-content:center}.store-tracked-order{padding:16px}.store-tracked-heading{gap:8px}.store-tracked-heading h2{font-size:18px}.store-tracked-actions{gap:4px}.store-tracked-actions .button{padding:8px}.store-tracked-metrics{gap:8px;padding:12px}.store-tracked-metrics span{font-size:9px;line-height:1.4}.store-tracked-metrics strong{font-size:15px}.store-tracked-status{gap:7px}.store-tracked-order .customer-payment-progress{padding:0 0 12px}}
