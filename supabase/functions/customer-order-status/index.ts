@@ -25,9 +25,16 @@ Deno.serve(async(req:Request)=>{
   const [{data:business,error:businessError},{data:items,error:itemError},{data:payments,error:paymentError}]=await Promise.all([
    db.from("businesses").select("name").eq("id",order.business_id).maybeSingle(),
    db.from("order_items").select("item_name,quantity,unit_price_minor").eq("order_id",order.id).order("created_at",{ascending:true}),
-   db.from("payment_records").select("amount_minor,method,recorded_at").eq("order_id",order.id).order("recorded_at",{ascending:true})
+   db.from("payment_records").select("amount_minor,method,recorded_at").eq("order_id",order.id).eq("business_id",order.business_id).order("recorded_at",{ascending:true})
   ]);
   if(businessError||itemError||paymentError)return json({error:"Order details could not be loaded."},500);
-  return json({success:true,business:{name:business?.name||"Store"},order,items:items||[],payments:payments||[]});
+  const total=Number(order.total_amount_minor);
+  const paid=(payments||[]).reduce((sum,p)=>{
+   const amount=Number(p.amount_minor);
+   return Number.isSafeInteger(amount)&&amount>0?sum+amount:sum;
+  },0);
+  if(!Number.isSafeInteger(total)||total<0||!Number.isSafeInteger(paid)||paid<0)return json({error:"Order payment totals are invalid."},500);
+  const trackedOrder={...order,amount_paid_minor:paid,balance_remaining_minor:Math.max(0,total-paid)};
+  return json({success:true,business:{name:business?.name||"Store"},order:trackedOrder,items:items||[],payments:payments||[]});
  }catch{return json({error:"Order could not be loaded."},500);}
 });
