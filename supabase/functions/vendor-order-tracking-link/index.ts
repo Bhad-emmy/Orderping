@@ -84,13 +84,18 @@ Deno.serve(async (req: Request) => {
 
     const { data: order, error: orderError } = await db
       .from("orders")
-      .select("id, business_id, order_type")
+      .select("id, business_id, order_type, status, customer_access_token_hash")
       .eq("id", orderId)
       .eq("business_id", businessId)
       .eq("order_type", "order")
       .maybeSingle();
     if (orderError) return json({ error: "Order could not be verified." }, 500);
     if (!order) return json({ error: "Order not found for this business." }, 404);
+    if (!["processing", "ready", "dispatched", "delivered"].includes(order.status)) return json({ error: "Confirm the order before activating customer tracking." }, 409);
+    const { data: payments, error: paymentError } = await db.from("payment_records").select("amount_minor").eq("order_id", orderId).eq("business_id", businessId);
+    if (paymentError) return json({ error: "Payment status could not be verified." }, 500);
+    if (!(payments || []).some((p) => Number(p.amount_minor) > 0)) return json({ error: "Record at least one payment before activating customer tracking." }, 409);
+    if (order.customer_access_token_hash) return json({ error: "Tracking is already active. Do not create a new link because it would invalidate the customer’s existing link." }, 409);
 
     const token = [...crypto.getRandomValues(new Uint8Array(32))]
       .map((byte) => byte.toString(16).padStart(2, "0"))
