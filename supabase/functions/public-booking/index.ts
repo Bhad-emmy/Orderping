@@ -71,13 +71,25 @@ Deno.serve(async (req: Request) => {
     if (!service) return json({ error: "That service is no longer available." }, 400);
     const start = new Date(startsAt);
     const end = new Date(startsAt + Number(service.duration_minutes) * 60_000);
-    const weekday = start.getUTCDay();
+    const businessTimezone = text(business.timezone, 80) || "Africa/Lagos";
+    const localParts = (d: Date) => {
+      const parts = new Intl.DateTimeFormat("en-GB", {
+        timeZone: businessTimezone, weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+      }).formatToParts(d);
+      const part = (type: string) => parts.find(p => p.type === type)?.value || "";
+      const weekdayMap: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+      return { weekday: weekdayMap[part("weekday")], minutes: Number(part("hour")) * 60 + Number(part("minute")) };
+    };
+    let localStart: ReturnType<typeof localParts>, localEnd: ReturnType<typeof localParts>;
+    try { localStart = localParts(start); localEnd = localParts(end); }
+    catch { return json({ error: "Business timezone is invalid. Contact the business." }, 500); }
+    const weekday = localStart.weekday;
     const { data: hours, error: hoursError } = await db.from("business_hours").select("opens_at,closes_at,is_closed")
       .eq("business_id", business.id).eq("weekday", weekday).maybeSingle();
     if (hoursError) return json({ error: "Business hours could not be checked." }, 500);
     if (!hours || hours.is_closed || !hours.opens_at || !hours.closes_at) return json({ error: "The business is closed on that day." }, 400);
-    const hhmm = (d: Date) => d.toISOString().slice(11, 16);
-    if (hhmm(start) < String(hours.opens_at).slice(0, 5) || hhmm(end) > String(hours.closes_at).slice(0, 5)) {
+    const toMinutes = (v: string) => { const [h, m] = v.slice(0, 5).split(":").map(Number); return h * 60 + m; };
+    if (localStart.minutes < toMinutes(String(hours.opens_at)) || localEnd.minutes > toMinutes(String(hours.closes_at)) || localEnd.weekday !== weekday) {
       return json({ error: "Choose a time within the business opening hours." }, 400);
     }
     const { data: appointment, error: insertError } = await db.from("appointments").insert({
