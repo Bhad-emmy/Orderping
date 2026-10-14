@@ -462,6 +462,9 @@ function Storefront() {
   const [submitting, setSubmitting] = useState(false); const [success, setSuccess] = useState(""); const [orderLink, setOrderLink] = useState(""); const [linkCopied, setLinkCopied] = useState(false);
   const [trackingInput, setTrackingInput] = useState(""); const [trackingError, setTrackingError] = useState("");
   useEffect(() => {
+    if (trackingToken) { setTrackingError(""); setTrackingInput(""); }
+  }, [trackingToken]);
+  useEffect(() => {
     let active = true;
     async function load() {
       if (!supabase) { setError("Storefront configuration is incomplete."); setLoading(false); return; }
