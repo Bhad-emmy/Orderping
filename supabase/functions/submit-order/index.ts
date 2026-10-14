@@ -8,10 +8,10 @@ Deno.serve(async(req:Request)=>{
  if(req.method==="OPTIONS")return new Response("ok",{headers:cors}); if(req.method!=="POST")return json({error:"Method not allowed."},405);
  try{
   if(Number(req.headers.get("content-length")||0)>20000)return json({error:"Request too large."},413);
-  const b=await req.json(),slug=text(b?.slug,50).toLowerCase(),name=text(b?.customer_name,120),phone=text(b?.customer_phone,32),email=text(b?.customer_email,254)||null,note=text(b?.customer_note,500)||null,fulfilment=b?.fulfilment_method;
+  const b=await req.json(),slug=text(b?.slug,50).toLowerCase(),name=text(b?.customer_name,120),phone=text(b?.customer_phone,32),email=text(b?.customer_email,254),note=text(b?.customer_note,500)||null,fulfilment=b?.fulfilment_method;
   if(!/^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$/.test(slug))return json({error:"Store link is invalid."},400);
   if(!name||!/^[+0-9() .-]{5,32}$/.test(phone))return json({error:"Enter your name and a valid phone number."},400);
-  if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return json({error:"Enter a valid email address."},400);
+  if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return json({error:"Enter a valid email address for tracking updates."},400);
   if(!["delivery","collection"].includes(fulfilment))return json({error:"Choose delivery or collection."},400);
   if(!Array.isArray(b?.items)||b.items.length<1||b.items.length>30)return json({error:"Choose between 1 and 30 products."},400);
   const qty=new Map<string,number>(); for(const x of b.items){if(!uuid(x?.catalog_item_id)||!Number.isInteger(x?.quantity)||x.quantity<1||x.quantity>1000)return json({error:"One or more product quantities are invalid."},400);qty.set(x.catalog_item_id,(qty.get(x.catalog_item_id)||0)+x.quantity);}
