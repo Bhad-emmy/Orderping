@@ -29,10 +29,11 @@ Deno.serve(async(req:Request)=>{
   const total=lines.reduce((s,l)=>s+l.quantity*l.unit_price_minor,0);if(!Number.isSafeInteger(total)||total<0||lines.some(l=>!Number.isSafeInteger(l.unit_price_minor)||!Number.isSafeInteger(l.quantity*l.unit_price_minor)))return json({error:"Order total is invalid."},400);
   const idem=text(req.headers.get("x-idempotency-key"),128);if(idem&&!/^[a-zA-Z0-9._:-]{8,128}$/.test(idem))return json({error:"Request identifier is invalid."},400);
   if(idem){const {data:old}=await db.from("orders").select("id,status,total_amount_minor").eq("business_id",business.id).eq("idempotency_key",idem).maybeSingle();if(old)return json({success:true,duplicate:true,request:old});}
-  const {data:order,error:oe}=await db.from("orders").insert({business_id:business.id,customer_name:name,customer_phone:phone,customer_email:email,customer_note:note,fulfilment_method:fulfilment,total_amount_minor:total,amount_paid_minor:0,currency_code:"NGN",status:"new",order_type:"order",requested_pickup_at:null,idempotency_key:idem||null}).select("id,status,total_amount_minor,created_at").single();
+  const accessToken=[...crypto.getRandomValues(new Uint8Array(32))].map(x=>x.toString(16).padStart(2,"0")).join("");const accessTokenHash=await hash(accessToken);
+  const {data:order,error:oe}=await db.from("orders").insert({business_id:business.id,customer_name:name,customer_phone:phone,customer_email:email,customer_note:note,fulfilment_method:fulfilment,total_amount_minor:total,amount_paid_minor:0,currency_code:"NGN",status:"new",order_type:"order",requested_pickup_at:null,idempotency_key:idem||null,customer_access_token_hash:accessTokenHash}).select("id,status,total_amount_minor,created_at").single();
   if(oe||!order)return json({error:"Your order could not be saved. Please try again."},500);
   const {error:ie}=await db.from("order_items").insert(lines.map(l=>({...l,order_id:order.id})));
   if(ie){await db.from("orders").delete().eq("id",order.id).eq("business_id",business.id);return json({error:"Your order could not be completed. Please try again."},500);}
-  return json({success:true,request:order},201);
+  return json({success:true,request:order,customer_access_token:accessToken},201);
  }catch{return json({error:"Your order could not be submitted. Please try again."},500);}
 });
