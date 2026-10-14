@@ -98,7 +98,6 @@ Deno.serve(async (req: Request) => {
     if (paymentError) return json({ error: "Payment status could not be verified." }, 500);
     if (!(payments || []).some((p) => Number(p.amount_minor) > 0)) return json({ error: "Record at least one payment before activating customer tracking." }, 409);
     if (order.customer_access_token_hash && !reissue) return json({ error: "Tracking is already active. Use the explicit reissue action to replace the customer link." }, 409);
-    if (reissue && !order.customer_access_token_hash) return json({ error: "Tracking is not active yet. Activate it from the order status action first." }, 409);
 
     const token = [...crypto.getRandomValues(new Uint8Array(32))]
       .map((byte) => byte.toString(16).padStart(2, "0"))
@@ -107,7 +106,7 @@ Deno.serve(async (req: Request) => {
     let updateQuery = db.from("orders")
       .update({ customer_access_token_hash: tokenHash, updated_at: new Date().toISOString() })
       .eq("id", orderId).eq("business_id", businessId);
-    if (reissue) updateQuery = updateQuery.eq("customer_access_token_hash", order.customer_access_token_hash);
+    if (reissue && order.customer_access_token_hash) updateQuery = updateQuery.eq("customer_access_token_hash", order.customer_access_token_hash);
     else updateQuery = updateQuery.is("customer_access_token_hash", null);
     const { data: updated, error: updateError } = await updateQuery.select("id").maybeSingle();
     if (updateError) return json({ error: "A tracking link could not be created. Please try again." }, 500);
