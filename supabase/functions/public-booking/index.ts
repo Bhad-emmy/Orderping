@@ -91,9 +91,14 @@ Deno.serve(async (req: Request) => {
     try { localStart = localParts(start); localEnd = localParts(end); }
     catch { return json({ error: "Business timezone is invalid. Contact the business." }, 500); }
     const weekday = localStart.weekday;
-    const { data: hours, error: hoursError } = await db.from("business_hours").select("opens_at,closes_at,is_closed")
-      .eq("business_id", business.id).eq("weekday", weekday).maybeSingle();
+    const { data: allHours, error: hoursError } = await db.from("business_hours")
+      .select("weekday,opens_at,closes_at,is_closed").eq("business_id", business.id);
     if (hoursError) return json({ error: "Business hours could not be checked." }, 500);
+    // If a business has not configured any hours yet, use the same safe default shown on the public form.
+    // Once it configures hours, missing days and explicitly closed days remain unavailable.
+    const hasConfiguredHours = (allHours || []).length > 0;
+    const hours = (allHours || []).find((h: { weekday: number }) => h.weekday === weekday)
+      ?? (!hasConfiguredHours ? { weekday, opens_at: "09:00:00", closes_at: "17:00:00", is_closed: false } : null);
     if (!hours || hours.is_closed || !hours.opens_at || !hours.closes_at) return json({ error: "The business is closed on that day." }, 400);
     const toMinutes = (v: string) => { const [h, m] = v.slice(0, 5).split(":").map(Number); return h * 60 + m; };
     if (localStart.minutes < toMinutes(String(hours.opens_at)) || localEnd.minutes > toMinutes(String(hours.closes_at)) || localEnd.weekday !== weekday) {
