@@ -3,6 +3,7 @@ import { Link, Navigate, Route, Routes, useLocation, useNavigate, useParams } fr
 import { Activity, ArrowRight, Bell, Check, CheckCircle2, ChevronDown, CircleHelp, ClipboardList, Clock3, Copy, CreditCard, ExternalLink, Eye, EyeOff, LayoutDashboard, LoaderCircle, LogOut, Menu, Package, Plus, RefreshCw, Search, Settings, ShoppingBag, ShoppingCart, Store, Truck, Wallet, MessageCircle, X } from "lucide-react";
 import type { Session, User } from "@supabase/supabase-js";
 import { formatNaira, isSupabaseConfigured, messageFromError, supabase } from "./lib/supabase";
+import PublicBookingPage from "./PublicBookingPage";
 
 type Business = { id: string; owner_id: string; name: string; slug: string; business_type: string; email: string | null; whatsapp_number: string | null; timezone: string };
 type Product = { id: string; business_id: string; type: string; name: string; description: string | null; price_minor: number; original_price_minor?: number | null; image_url?: string | null; is_active: boolean; created_at?: string };
@@ -39,6 +40,7 @@ export default function App() {
   if (!ready) return <FullLoader label="Starting OrderPing…" />;
   return <Routes>
     <Route path="/store/:slug" element={<Storefront />} />
+    <Route path="/book/:slug" element={<PublicBookingPage />} />
     <Route path="/order/:token" element={<CustomerOrderPage />} />
     <Route path="/login" element={session ? <Navigate to="/app" replace /> : <AuthScreen />} />
     <Route path="/" element={<LandingPage signedIn={Boolean(session)} />} />
