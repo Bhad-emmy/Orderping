@@ -4,7 +4,6 @@ import { ArrowLeft, CalendarDays, CheckCircle2, LoaderCircle } from "lucide-reac
 import { isSupabaseConfigured, supabase } from "./lib/supabase";
 type Hours = { weekday: number; opens_at: string | null; closes_at: string | null; is_closed: boolean };
 type Business = { name: string; slug: string; timezone: string; whatsapp_number: string | null };
-const money = (n: number) => formatNaira(Number(n || 0));
 const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 export default function PublicBookingPage() {
