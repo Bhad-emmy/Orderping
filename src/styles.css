@@ -145,3 +145,16 @@ input,textarea,select{width:100%;border:1px solid #dfe4ee;background:#fff;color:
 .image-lightbox-help{margin:0;color:#c3c8d4;font-size:11px;text-align:center}
 @media(max-width:640px){.store-image-hint{right:6px;bottom:6px;padding:5px 6px;font-size:9px;opacity:1;transform:none}.image-lightbox{padding:14px}.image-lightbox-stage{height:68vh}.image-lightbox-title{font-size:14px}.image-lightbox-controls{gap:8px}}
 @media(prefers-reduced-motion:reduce){.image-lightbox-stage img,.store-image-hint{transition:none}}
+
+
+/* Compare-at pricing for vendor and public product cards */
+.product-price-display,.store-price-display{display:flex;align-items:center;flex-wrap:wrap;gap:6px;min-width:0}
+.product-price-display{justify-content:flex-start}
+.store-price-display{gap:7px}
+.price-original{color:#8992a5;font-size:11px;font-weight:600;text-decoration:line-through;text-decoration-thickness:1.5px}
+.price-current{color:#1b2434;font-weight:800;font-size:14px;white-space:nowrap}
+.discount-badge{display:inline-flex;align-items:center;padding:4px 6px;border-radius:5px;background:#fff0f0;color:#c52d3a;font-size:9px;line-height:1;font-weight:800;white-space:nowrap}
+.store-price-display .price-original{font-size:12px}
+.store-price-display .price-current{font-size:17px}
+.store-product-bottom .store-price-display{flex:1}
+.product-card-footer .product-price-display{max-width:100%}
