@@ -22,8 +22,11 @@ export default function PublicBookingPage() {
   const [success, setSuccess] = useState<{ id: string; starts_at: string } | null>(null);
   const selectedWeekday = date ? new Date(date + "T12:00:00").getDay() : -1;
   const configuredHours = hours.length > 0;
+  const selectedDayHours = date ? hours.find(h => h.weekday === selectedWeekday) : undefined;
+  // Only an explicitly configured closed day should block booking. A missing weekday
+  // record is not the same as a closed day; use the standard fallback hours instead.
   const dayHours = date
-    ? hours.find(h => h.weekday === selectedWeekday) ?? (!configuredHours ? { weekday: selectedWeekday, opens_at: "09:00:00", closes_at: "17:00:00", is_closed: false } : undefined)
+    ? selectedDayHours ?? { weekday: selectedWeekday, opens_at: "09:00:00", closes_at: "17:00:00", is_closed: false }
     : undefined;
   const minDate = new Date(Date.now() + 60_000).toISOString().slice(0, 10);
   useEffect(() => {
