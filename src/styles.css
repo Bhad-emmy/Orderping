@@ -167,6 +167,9 @@ input,textarea,select{width:100%;border:1px solid #dfe4ee;background:#fff;color:
 .customer-order-link-copy h2{font-size:20px;margin:0 0 7px}
 .customer-order-link-copy p{font-size:12px;margin:0 0 15px;max-width:650px}
 .customer-order-link-copy .button{margin:0 8px 8px 0}
+.customer-order-link-actions{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 5px}
+.customer-order-link-actions .button{margin:0}
+.customer-order-link-copy .field-hint{margin:4px 0 0;font-size:11px;color:#68738a}
 .customer-order-link-url{max-width:100%;overflow-wrap:anywhere;font-size:11px;color:#68738a;background:#f7f8fc;border:1px solid #e9ecf3;padding:10px 12px;border-radius:8px;margin:0 0 10px}
 .customer-order-page{min-height:100vh;background:#f7f8fc}
 .customer-order-content{width:min(100% - 32px,760px);margin:0 auto;padding:34px 0 54px}
