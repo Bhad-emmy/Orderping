@@ -250,6 +250,34 @@ function VendorApp({ user }: { user: User }) {
     } catch (err) { setPageError(messageFromError(err)); }
     finally { setLoading(false); }
   }, [user.id]);
+  useEffect(() => {
+    if (!mobileNav) return;
+    const body = document.body;
+    const scrollY = window.scrollY;
+    const previous = {
+      position: body.style.position,
+      top: body.style.top,
+      left: body.style.left,
+      right: body.style.right,
+      width: body.style.width,
+      overflow: body.style.overflow,
+    };
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.left = "0";
+    body.style.right = "0";
+    body.style.width = "100%";
+    body.style.overflow = "hidden";
+    return () => {
+      body.style.position = previous.position;
+      body.style.top = previous.top;
+      body.style.left = previous.left;
+      body.style.right = previous.right;
+      body.style.width = previous.width;
+      body.style.overflow = previous.overflow;
+      window.scrollTo(0, scrollY);
+    };
+  }, [mobileNav]);
   useEffect(() => { void loadData(); }, [loadData]);
   const activeOrders = useMemo(() => orders.filter(o => !["cancelled", "delivered"].includes(o.status)), [orders]);
   const filteredOrders = useMemo(() => { const q = search.trim().toLowerCase(); return q ? orders.filter(o => [o.customer_name, o.customer_phone, o.id, o.status].some(v => String(v || "").toLowerCase().includes(q))) : orders; }, [orders, search]);
