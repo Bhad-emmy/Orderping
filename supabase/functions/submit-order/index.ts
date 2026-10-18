@@ -17,7 +17,7 @@ Deno.serve(async(req:Request)=>{
   const qty=new Map<string,number>(); for(const x of b.items){if(!uuid(x?.catalog_item_id)||!Number.isInteger(x?.quantity)||x.quantity<1||x.quantity>1000)return json({error:"One or more product quantities are invalid."},400);qty.set(x.catalog_item_id,(qty.get(x.catalog_item_id)||0)+x.quantity);}
   const url=Deno.env.get("SUPABASE_URL"),key=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");if(!url||!key)return json({error:"Server configuration is incomplete."},503);
   const db=createClient(url,key,{db:{schema:"orderping"},auth:{persistSession:false,autoRefreshToken:false}});
-  const ip=(req.headers.get("x-real-ip")||req.headers.get("x-forwarded-for")||"unknown").split(",")[0].trim().slice(0,120);
+  const ip=(req.headers.get("cf-connecting-ip")||"unknown").trim().slice(0,120);
   for(const [bucket,limit] of [[await hash("order:ip:"+ip),20],[await hash("order:phone:"+slug+":"+phone.replace(/[^0-9+]/g,"")),5]] as const){
    const {data,error}=await db.rpc("consume_rate_limit",{p_bucket_key:bucket,p_limit:limit,p_window_seconds:60});if(error)return json({error:"Ordering is temporarily unavailable."},503);
    const r=Array.isArray(data)?data[0]:data;if(!r?.allowed)return json({error:"Too many requests. Wait a minute and try again."},429);
@@ -28,12 +28,21 @@ Deno.serve(async(req:Request)=>{
   const lines=products.map(p=>({catalog_item_id:p.id,item_name:p.name,quantity:qty.get(p.id)!,unit_price_minor:Number(p.price_minor)}));
   const total=lines.reduce((s,l)=>s+l.quantity*l.unit_price_minor,0);if(!Number.isSafeInteger(total)||total<0||lines.some(l=>!Number.isSafeInteger(l.unit_price_minor)||!Number.isSafeInteger(l.quantity*l.unit_price_minor)))return json({error:"Order total is invalid."},400);
   const idem=text(req.headers.get("x-idempotency-key"),128);if(idem&&!/^[a-zA-Z0-9._:-]{8,128}$/.test(idem))return json({error:"Request identifier is invalid."},400);
-  if(idem){const {data:old}=await db.from("orders").select("id,status,total_amount_minor").eq("business_id",business.id).eq("idempotency_key",idem).maybeSingle();if(old)return json({success:true,duplicate:true,request:old});}
-  const {data:order,error:oe}=await db.from("orders").insert({business_id:business.id,customer_name:name,customer_phone:phone,customer_email:email,customer_note:note,fulfilment_method:fulfilment,total_amount_minor:total,amount_paid_minor:0,currency_code:"NGN",status:"new",order_type:"order",requested_pickup_at:null,idempotency_key:idem||null,customer_access_token_hash:null}).select("id,status,total_amount_minor,created_at").single();
-  if(oe||!order)return json({error:"Your order could not be saved. Please try again."},500);
-  const {error:ie}=await db.from("order_items").insert(lines.map(l=>({...l,order_id:order.id})));
-  if(ie){await db.from("orders").delete().eq("id",order.id).eq("business_id",business.id);return json({error:"Your order could not be completed. Please try again."},500);}
+  const {data:created,error:ce}=await db.rpc("create_order_with_items",{
+   p_business_id:business.id,
+   p_customer_name:name,
+   p_customer_phone:phone,
+   p_customer_email:email,
+   p_customer_note:note,
+   p_fulfilment_method:fulfilment,
+   p_order_type:"order",
+   p_requested_pickup_at:null,
+   p_idempotency_key:idem||null,
+   p_items:[...qty.entries()].map(([catalog_item_id,quantity])=>({catalog_item_id,quantity}))
+  });
+  if(ce||!created?.request)return json({error:"Your order could not be saved. Please try again."},500);
+  // The database function creates the order and all line items in one transaction.
   // Do not issue or email a tracking link until the vendor confirms the order and at least one payment is recorded.
-  return json({success:true,request:order,tracking_status:"awaiting_vendor_confirmation_and_payment"},201);
+  return json({success:true,duplicate:Boolean(created.duplicate),request:created.request,tracking_status:"awaiting_vendor_confirmation_and_payment"},created.duplicate?200:201);
  }catch{return json({error:"Your order could not be submitted. Please try again."},500);}
 });
