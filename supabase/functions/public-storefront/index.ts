@@ -11,7 +11,7 @@ Deno.serve(async (req: Request) => {
     const url = Deno.env.get("SUPABASE_URL"), key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     if (!url || !key) return json({error:"Server configuration is incomplete."},503);
     const db = createClient(url,key,{db:{schema:"orderping"},auth:{persistSession:false,autoRefreshToken:false}});
-    const {data:business,error} = await db.from("businesses").select("id,name,slug").eq("slug",slug).maybeSingle();
+    const {data:business,error} = await db.from("businesses").select("id,name,slug").eq("slug",slug).eq("approval_status","approved").maybeSingle();
     if (error) return json({error:"Store could not be loaded."},500);
     if (!business) return json({error:"This store could not be found."},404);
     const {data:products,error:productError} = await db.from("catalog_items").select("id,business_id,type,name,description,price_minor,original_price_minor,image_url,is_active,created_at").eq("business_id",business.id).eq("type","product").eq("is_active",true).order("created_at",{ascending:false});
