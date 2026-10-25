@@ -87,3 +87,46 @@ create policy "Approved owners view notification logs for their business"
   on orderping.notification_logs for select to authenticated
   using (exists (select 1 from orderping.businesses b where b.id = business_id
     and b.owner_id = (select auth.uid()) and b.approval_status = 'approved'));
+
+-- Atomic server-side rate limiter used by public Edge Functions.
+create table if not exists orderping.rate_limits (
+  bucket_key text primary key,
+  window_started_at timestamptz not null,
+  request_count integer not null check (request_count >= 0)
+);
+revoke all on orderping.rate_limits from public, anon, authenticated;
+grant select, insert, update, delete on orderping.rate_limits to service_role;
+
+create or replace function orderping.consume_rate_limit(
+  p_bucket_key text,
+  p_limit integer,
+  p_window_seconds integer
+) returns table(allowed boolean, request_count integer)
+language plpgsql
+security definer
+set search_path = pg_catalog, orderping
+as $$
+declare
+  v_started timestamptz;
+  v_count integer;
+begin
+  if p_bucket_key is null or length(p_bucket_key) < 1 or length(p_bucket_key) > 200
+    or p_limit < 1 or p_limit > 10000 or p_window_seconds < 1 or p_window_seconds > 86400 then
+    raise exception 'Invalid rate limit parameters' using errcode = '22023';
+  end if;
+  insert into orderping.rate_limits(bucket_key, window_started_at, request_count)
+    values (p_bucket_key, clock_timestamp(), 1)
+  on conflict (bucket_key) do update
+    set window_started_at = case
+          when orderping.rate_limits.window_started_at <= clock_timestamp() - make_interval(secs => p_window_seconds)
+          then clock_timestamp() else orderping.rate_limits.window_started_at end,
+        request_count = case
+          when orderping.rate_limits.window_started_at <= clock_timestamp() - make_interval(secs => p_window_seconds)
+          then 1 else orderping.rate_limits.request_count + 1 end
+  returning orderping.rate_limits.window_started_at, orderping.rate_limits.request_count
+    into v_started, v_count;
+  return query select (v_count <= p_limit), v_count;
+end;
+$$;
+revoke all on function orderping.consume_rate_limit(text, integer, integer) from public, anon, authenticated;
+grant execute on function orderping.consume_rate_limit(text, integer, integer) to service_role;
