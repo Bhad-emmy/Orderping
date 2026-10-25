@@ -292,9 +292,9 @@ function VendorApp({ user }: { user: User }) {
     if (token && /^[a-f0-9]{64}$/i.test(token)) {
       const url = window.location.origin + "/store/" + encodeURIComponent(business.slug) + "?track=" + encodeURIComponent(token);
       if (data.email_notification === "sent") {
-        show("Tracking is active and the customer has been emailed.");
+        show("Tracking is active. Share the private link with the customer.", "info");
       } else {
-        try { await navigator.clipboard.writeText(url); show("Tracking is active. No customer email was delivered, so the private link was copied for you to share.", "info"); }
+        try { await navigator.clipboard.writeText(url); show("Tracking is active. The private link was copied for you to share.", "info"); }
         catch { window.prompt("Copy this private customer tracking link:", url); show("Tracking is active. Share the private link with the customer.", "info"); }
       }
     } else if (data.already_active) {
