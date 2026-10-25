@@ -8,7 +8,6 @@ const cors = {
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json", "Cache-Control": "no-store, private" } });
 const uuid = (v: unknown) => typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
-const escapeHtml = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 async function hash(v: string) {
   const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v));
   return [...new Uint8Array(bytes)].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -35,7 +34,18 @@ Deno.serve(async (req: Request) => {
     if (authError || !authData.user) return json({ error: "Your session is invalid or expired. Sign in again." }, 401);
 
     const db = createClient(url, serviceKey, { db: { schema: "orderping" }, auth: { persistSession: false, autoRefreshToken: false } });
-    const { data: business, error: businessError } = await db.from("businesses").select("id,owner_id,name,slug").eq("id", businessId).maybeSingle();
+
+    const bucketBytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("activate-order-tracking:user:" + authData.user.id));
+    const bucket = [...new Uint8Array(bucketBytes)].map((b) => b.toString(16).padStart(2, "0")).join("");
+    const { data: rateData, error: rateError } = await db.rpc("consume_rate_limit", {
+      p_bucket_key: bucket,
+      p_limit: 20,
+      p_window_seconds: 60,
+    });
+    if (rateError) return json({ error: "Tracking activation is temporarily unavailable." }, 503);
+    const rate = Array.isArray(rateData) ? rateData[0] : rateData;
+    if (!rate?.allowed) return json({ error: "Too many requests. Wait a minute and try again." }, 429);
+    const { data: business, error: businessError } = await db.from("businesses").select("id,owner_id,name").eq("id", businessId).maybeSingle();
     if (businessError) return json({ error: "Business could not be verified." }, 500);
     if (!business || business.owner_id !== authData.user.id) return json({ error: "You are not allowed to activate tracking for this business." }, 403);
 
@@ -66,28 +76,9 @@ Deno.serve(async (req: Request) => {
     if (updateError) return json({ error: "Tracking could not be activated." }, 500);
     if (!updated) return json({ success: true, activated: true, already_active: true, email_notification: "not_repeated" });
 
-    let emailNotification = "not_requested";
-    const resendKey = Deno.env.get("RESEND_API_KEY");
-    if (order.customer_email && resendKey) {
-      const siteUrl = (Deno.env.get("ORDERPING_SITE_URL") || "https://orderping.vercel.app").replace(/\/$/, "");
-      const trackingUrl = siteUrl + "/store/" + encodeURIComponent(business.slug) + "?track=" + encodeURIComponent(token);
-      const from = Deno.env.get("RESEND_FROM_EMAIL") || "OrderPing <onboarding@resend.dev>";
-      try {
-        const mail = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: { "Authorization": "Bearer " + resendKey, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            from,
-            to: [order.customer_email],
-            subject: "Your order is confirmed — OrderPing #" + order.id.slice(0, 8).toUpperCase(),
-            html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#182230"><h1>Your order is confirmed, ${escapeHtml(order.customer_name)}.</h1><p>The store has confirmed your order and recorded your first payment.</p><p><strong>Order reference:</strong> #${order.id.slice(0, 8).toUpperCase()}</p><p><strong>Order total:</strong> ${(Number(order.total_amount_minor) / 100).toLocaleString("en-NG", { style: "currency", currency: "NGN" })}</p><p>Use your private link to track order progress, see payments, and check the remaining balance.</p><p><a href="${trackingUrl}" style="display:inline-block;padding:12px 18px;background:#171923;color:#fff;text-decoration:none;border-radius:8px">Track my order and balance</a></p><p style="font-size:12px;color:#667085">Keep this private link safe. Anyone with it can view this order.</p></div>`,
-          }),
-        });
-        if (mail.ok) emailNotification = "sent";
-        else { emailNotification = "failed"; console.error("OrderPing activation email failed", mail.status, (await mail.text()).slice(0, 400)); }
-      } catch (err) { emailNotification = "failed"; console.error("OrderPing activation email request failed", String(err).slice(0, 250)); }
-    } else if (order.customer_email) emailNotification = "not_configured";
-    return json({ success: true, activated: true, customer_access_token: token, email_notification: emailNotification });
+    const siteUrl = (Deno.env.get("ORDERPING_SITE_URL") || "https://orderping.vercel.app").replace(/\/$/, "");
+    const trackingUrl = siteUrl + "/store/" + encodeURIComponent(business.slug || "") + "?track=" + encodeURIComponent(token);
+    return json({ success: true, activated: true, customer_access_token: token, tracking_url: trackingUrl, email_notification: "disabled" });
   } catch {
     return json({ error: "Customer tracking could not be activated." }, 500);
   }
