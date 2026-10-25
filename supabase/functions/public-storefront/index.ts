@@ -20,7 +20,7 @@ Deno.serve(async (req: Request) => {
     const body = await req.json();
     const slug = typeof body?.slug === "string" ? body.slug.trim().toLowerCase() : "";
     if (!/^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$/.test(slug)) return json({error:"Store link is invalid."},400);
-    const {data:business,error} = await db.from("businesses").select("id,name,slug").eq("slug",slug).maybeSingle();
+    const {data:business,error} = await db.from("businesses").select("id,name,slug").eq("slug",slug).eq("approval_status","approved").maybeSingle();
     if (error) return json({error:"Store could not be loaded."},500);
     if (!business) return json({error:"This store could not be found."},404);
     const {data:products,error:productError} = await db.from("catalog_items").select("id,business_id,type,name,description,price_minor,original_price_minor,image_url,is_active,created_at").eq("business_id",business.id).eq("type","product").eq("is_active",true).order("created_at",{ascending:false});
