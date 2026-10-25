@@ -45,7 +45,7 @@ Deno.serve(async (req: Request) => {
     if (rateError) return json({ error: "Tracking activation is temporarily unavailable." }, 503);
     const rate = Array.isArray(rateData) ? rateData[0] : rateData;
     if (!rate?.allowed) return json({ error: "Too many requests. Wait a minute and try again." }, 429);
-    const { data: business, error: businessError } = await db.from("businesses").select("id,owner_id,name").eq("id", businessId).maybeSingle();
+    const { data: business, error: businessError } = await db.from("businesses").select("id,owner_id,name,slug").eq("id", businessId).maybeSingle();
     if (businessError) return json({ error: "Business could not be verified." }, 500);
     if (!business || business.owner_id !== authData.user.id) return json({ error: "You are not allowed to activate tracking for this business." }, 403);
 
