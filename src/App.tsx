@@ -45,9 +45,32 @@ export default function App() {
     <Route path="/order/:token" element={<CustomerOrderPage />} />
     <Route path="/login" element={session ? <Navigate to="/app" replace /> : <AuthScreen />} />
     <Route path="/" element={<LandingPage signedIn={Boolean(session)} />} />
+    <Route path="/admin/activation" element={session && session.user.email?.toLowerCase() === "edwinchukwuemeka12@gmail.com" ? <AdminActivationPage user={session.user} /> : <Navigate to="/login" replace />} />
     <Route path="/app/*" element={session ? <VendorApp user={session.user} /> : <Navigate to="/login" replace />} />
     <Route path="*" element={<NotFound />} />
   </Routes>;
+}
+
+function AdminActivationPage({ user }: { user: User }) {
+  const [vendors, setVendors] = useState<Array<{id:string;name:string;slug:string;email:string|null;created_at:string}>>([]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [issued, setIssued] = useState<{id:string;name:string;pin:string;expires_at:string}|null>(null);
+  const navigate = useNavigate();
+  const load = useCallback(async () => {
+    if (!supabase) return;
+    setBusy(true); setError("");
+    try { const {data,error}=await supabase.functions.invoke("admin-vendor-approval",{body:{action:"list"}}); if(error) throw error; setVendors(data?.vendors||[]); }
+    catch(err) { setError(messageFromError(err)); } finally { setBusy(false); }
+  },[]);
+  useEffect(()=>{void load();},[load]);
+  async function issue(id:string) {
+    if(!supabase)return; setBusy(true);setError("");setIssued(null);
+    try { const {data,error}=await supabase.functions.invoke("admin-vendor-approval",{body:{action:"issue_pin",business_id:id}}); if(error)throw error; if(!data?.pin)throw new Error(data?.error||"Could not issue PIN."); setIssued({id,name:data.business.name,pin:data.pin,expires_at:data.expires_at}); await load(); }
+    catch(err){setError(messageFromError(err));}finally{setBusy(false);}
+  }
+  async function signOut(){if(supabase){await supabase.auth.signOut();navigate("/login");}}
+  return <div className="onboarding-page"><div className="onboarding-top"><Brand/><button className="button ghost" onClick={signOut}><LogOut size={16}/> Sign out</button></div><div className="onboarding-card"><span className="eyebrow">ORDERPING ADMIN</span><h1>Vendor activation</h1><p>Verify each payment in your bank account before issuing a PIN. The PIN is shown only once and expires after 24 hours.</p>{error&&<div className="inline-alert error">{error}</div>}{issued&&<div className="activation-payment-card"><span className="field-hint">ACTIVATION PIN FOR {issued.name.toUpperCase()}</span><strong className="activation-account-number">{issued.pin}</strong><p>Expires {dateLabel(issued.expires_at)}. Send this PIN to the vendor via WhatsApp only after confirming their ₦2,500 payment.</p><button className="button secondary full" onClick={()=>{void navigator.clipboard?.writeText(issued.pin);}}>Copy PIN</button></div>}<button className="button secondary full" onClick={()=>void load()} disabled={busy}><RefreshCw size={16}/> Refresh pending stores</button>{vendors.length===0?<p>No pending stores found.</p>:vendors.map(v=><div className="activation-payment-card" key={v.id}><strong>{v.name}</strong><span className="field-hint">/store/{v.slug}</span><span>{v.email||"No business email provided"}</span><span className="field-hint">Registered {dateLabel(v.created_at)}</span><button className="button primary full" disabled={busy} onClick={()=>void issue(v.id)}><CheckCircle2 size={16}/> Generate activation PIN</button></div>)}<p className="field-hint">Signed in as {user.email}</p></div></div>;
 }
 
 function LandingPage({ signedIn }: { signedIn: boolean }) {
