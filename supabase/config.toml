@@ -10,3 +10,6 @@ verify_jwt = false
 
 [functions.submit-reservation]
 verify_jwt = false
+
+[functions.vendor-signup]
+verify_jwt = false
