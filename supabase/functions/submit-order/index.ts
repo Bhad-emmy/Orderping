@@ -22,7 +22,7 @@ Deno.serve(async(req:Request)=>{
    const {data,error}=await db.rpc("consume_rate_limit",{p_bucket_key:bucket,p_limit:limit,p_window_seconds:60});if(error)return json({error:"Ordering is temporarily unavailable."},503);
    const r=Array.isArray(data)?data[0]:data;if(!r?.allowed)return json({error:"Too many requests. Wait a minute and try again."},429);
   }
-  const {data:business,error:be}=await db.from("businesses").select("id").eq("slug",slug).maybeSingle();if(be)return json({error:"Store could not be loaded."},500);if(!business)return json({error:"Store not found."},404);
+  const {data:business,error:be}=await db.from("businesses").select("id").eq("slug",slug).eq("approval_status","approved").maybeSingle();if(be)return json({error:"Store could not be loaded."},500);if(!business)return json({error:"Store not found."},404);
   const ids=[...qty.keys()],{data:products,error:pe}=await db.from("catalog_items").select("id,name,price_minor").eq("business_id",business.id).eq("type","product").eq("is_active",true).in("id",ids);
   if(pe)return json({error:"Catalogue validation failed."},500);if(!products||products.length!==ids.length)return json({error:"A selected product is no longer available. Refresh the store."},400);
   const lines=products.map(p=>({catalog_item_id:p.id,item_name:p.name,quantity:qty.get(p.id)!,unit_price_minor:Number(p.price_minor)}));
