@@ -77,8 +77,28 @@ Deno.serve(async (req: Request) => {
     if (!updated) return json({ success: true, activated: true, already_active: true, email_notification: "not_repeated" });
 
     const siteUrl = (Deno.env.get("ORDERPING_SITE_URL") || "https://orderping.vercel.app").replace(/\/$/, "");
-    const trackingUrl = siteUrl + "/store/" + encodeURIComponent(business.slug || "") + "?track=" + encodeURIComponent(token);
-    return json({ success: true, activated: true, customer_access_token: token, tracking_url: trackingUrl, email_notification: "disabled" });
+    let emailNotification = "not_requested";
+    const resendKey = Deno.env.get("RESEND_API_KEY");
+    if (order.customer_email && resendKey) {
+      const siteUrl = (Deno.env.get("ORDERPING_SITE_URL") || "https://orderping.vercel.app").replace(/\/$/, "");
+      const trackingUrl = siteUrl + "/store/" + encodeURIComponent(business.slug) + "?track=" + encodeURIComponent(token);
+      const from = Deno.env.get("RESEND_FROM_EMAIL") || "OrderPing <onboarding@resend.dev>";
+      try {
+        const mail = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { "Authorization": "Bearer " + resendKey, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            from,
+            to: [order.customer_email],
+            subject: "Your order is confirmed — OrderPing #" + order.id.slice(0, 8).toUpperCase(),
+            html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#182230"><h1>Your order is confirmed, ${escapeHtml(order.customer_name)}.</h1><p>The store has confirmed your order and recorded your first payment.</p><p><strong>Order reference:</strong> #${order.id.slice(0, 8).toUpperCase()}</p><p><strong>Order total:</strong> ${(Number(order.total_amount_minor) / 100).toLocaleString("en-NG", { style: "currency", currency: "NGN" })}</p><p>Use your private link to track order progress, see payments, and check the remaining balance.</p><p><a href="${trackingUrl}" style="display:inline-block;padding:12px 18px;background:#171923;color:#fff;text-decoration:none;border-radius:8px">Track my order and balance</a></p><p style="font-size:12px;color:#667085">Keep this private link safe. Anyone with it can view this order.</p></div>`,
+          }),
+        });
+        if (mail.ok) emailNotification = "sent";
+        else { emailNotification = "failed"; console.error("OrderPing activation email failed", mail.status, (await mail.text()).slice(0, 400)); }
+      } catch (err) { emailNotification = "failed"; console.error("OrderPing activation email request failed", String(err).slice(0, 250)); }
+    } else if (order.customer_email) emailNotification = "not_configured";
+    return json({ success: true, activated: true, customer_access_token: token, email_notification: emailNotification });
   } catch {
     return json({ error: "Customer tracking could not be activated." }, 500);
   }
