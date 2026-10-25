@@ -87,3 +87,27 @@ create policy "Approved owners view notification logs for their business"
   on orderping.notification_logs for select to authenticated
   using (exists (select 1 from orderping.businesses b where b.id = business_id
     and b.owner_id = (select auth.uid()) and b.approval_status = 'approved'));
+
+-- Payment records are part of the vendor workspace too; pending vendors must not
+-- be able to read or insert payment ledger rows through the older policies.
+drop policy if exists "Owners record payments for their orders" on orderping.payment_records;
+create policy "Approved owners record payments for their orders"
+  on orderping.payment_records for insert to authenticated
+  with check (
+    recorded_by = (select auth.uid())
+    and exists (
+      select 1 from orderping.businesses b
+      join orderping.orders o on o.business_id = b.id
+      where b.id = business_id and o.id = order_id
+        and b.owner_id = (select auth.uid()) and b.approval_status = 'approved'
+    )
+  );
+
+drop policy if exists "Owners view their payment records" on orderping.payment_records;
+create policy "Approved owners view their payment records"
+  on orderping.payment_records for select to authenticated
+  using (exists (
+    select 1 from orderping.businesses b
+    where b.id = business_id and b.owner_id = (select auth.uid())
+      and b.approval_status = 'approved'
+  ));
