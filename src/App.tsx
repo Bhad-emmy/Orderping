@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { Link, Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
-import { Activity, ArrowRight, Bell, CalendarDays, CalendarCheck, Check, CheckCircle2, ChevronDown, CircleHelp, ClipboardList, Clock3, Copy, CreditCard, ExternalLink, Eye, EyeOff, LayoutDashboard, LoaderCircle, LogOut, Menu, Package, Plus, RefreshCw, Search, Settings, ShoppingBag, ShoppingCart, Store, Truck, Wallet, MessageCircle, X, TrendingUp } from "lucide-react";
+import { Activity, ArrowRight, Bell, CalendarDays, CalendarCheck, Check, CheckCircle2, ChevronDown, CircleHelp, ClipboardList, Clock3, Copy, CreditCard, ExternalLink, Eye, EyeOff, LayoutDashboard, LoaderCircle, LogOut, Menu, Package, Plus, RefreshCw, Search, Settings, ShoppingBag, ShoppingCart, Store, Truck, Wallet, MessageCircle, X } from "lucide-react";
 import type { Session, User } from "@supabase/supabase-js";
 import { formatNaira, isSupabaseConfigured, messageFromError, supabase } from "./lib/supabase";
 import PublicBookingPage from "./PublicBookingPage";
@@ -542,9 +542,6 @@ function Dashboard({ business, products, orders, payments, reservations, reserva
     </div>
     <div className="bottom-note"><span><Clock3 size={15} /> Reservations</span>{reservationUnavailable ? "Reservation service is currently unavailable." : pendingReservations + " pending · " + reservations.length + " total requests"}<button className="text-link" onClick={() => onNavigate("/app/reservations")}>View reservations <ArrowRight size={13} /></button></div>
   </>;
-}
-function Checklist({ done, number, title, description, action }: { done: boolean; number: string; title: string; description: string; action?: ReactNode }) {
-  return <div className="checklist-item"><span className={"check-circle" + (done ? " done" : "")}>{done ? <Check size={14} /> : number}</span><div><strong>{title}</strong><p>{description}</p>{action}</div></div>;
 }
 function MetricCard({ label, value, note, icon, tone, trend }: { label: string; value: string; note: string; icon: ReactNode; tone: string; trend: string }) {
   return <div className="metric-card"><div className="metric-top"><span className={"metric-icon " + tone}>{icon}</span><span className="metric-trend">{trend}</span></div><span className="metric-label">{label}</span><strong className="metric-value">{value}</strong><span className="metric-note">{note}</span></div>;
