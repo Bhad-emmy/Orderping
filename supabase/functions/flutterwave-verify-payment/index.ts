@@ -10,6 +10,10 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
   status, headers: { ...cors, "Content-Type": "application/json", "Cache-Control": "no-store" },
 });
 const refPattern = /^OP-[0-9a-f-]{36}$/i;
+async function sha256(value: string) {
+  const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return [...new Uint8Array(bytes)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
