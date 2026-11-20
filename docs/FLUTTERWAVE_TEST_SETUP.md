@@ -5,7 +5,7 @@ This guide is for the development branch only. Do not use production credentials
 ## Settlement model
 
 - OrderPing revenue is subscription-only.
-- Vendor subaccounts are created with `split_type: percentage` and `split_value: 1.0`, allocating 100% of the vendor split to the vendor.
+- Vendor subaccounts are created with `split_type: percentage` and `split_value: 0.0`. Flutterwave defines this field as the platform's commission, so zero means OrderPing takes no sales commission and the vendor receives the full split allocation.
 - OrderPing transaction commission is zero.
 - Flutterwave processing fees and applicable statutory deductions may still reduce the final settlement under Flutterwave's terms and merchant settings.
 - Vendor settlement timing follows Flutterwave's settlement cycle; it is not guaranteed to be instant.
