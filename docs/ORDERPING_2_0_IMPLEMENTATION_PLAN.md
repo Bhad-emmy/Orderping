@@ -45,7 +45,7 @@ Migrations `20261120091118_orderping_payment_foundation.sql`, `20261120091206_or
 
 ## Phase 2 — server-side payment functions (code added to the development branch)
 
-The database atomic finalizer `orderping.finalize_flutterwave_payment(...)` is implemented and restricted to `service_role`. New branch-only Edge Function source has been added for authenticated vendor bank verification/subaccount registration, guest order checkout initialization, redirect-side transaction verification, and signed Flutterwave webhook handling. These functions have not been deployed to Supabase yet. They must be tested in Flutterwave test mode before deployment.
+The database atomic finalizer `orderping.finalize_flutterwave_payment(...)` is implemented and restricted to `service_role`. Four new Edge Functions have been deployed to the current Supabase project: authenticated vendor bank verification/subaccount registration, guest order checkout initialization, redirect-side transaction verification, and signed Flutterwave webhook handling. They are deployed with the intended JWT settings, but remain inactive for payment processing until Flutterwave TEST credentials and webhook hash are configured as Supabase Edge Function secrets. They must pass sandbox tests before any production credentials or traffic are enabled.
 
 Implement and test, before enabling production checkout:
 
@@ -86,7 +86,7 @@ The payment ledger write must use the actual business owner as recorded_by, pres
 
 ## Current implementation boundary
 
-The database foundation and atomic ledger finalizer are deployed, but live Flutterwave checkout is not enabled. No provider subaccounts have been created, no money has been moved, and no payment webhook is active. Flutterwave credentials and verified account onboarding are required before live payment functions can be deployed.
+The database foundation, atomic ledger finalizer and four new Edge Functions are deployed. Flutterwave payment processing is not yet active because TEST credentials and webhook signing configuration still need to be added as Supabase Edge Function secrets. No provider subaccounts have been created, no money has been moved, and no production payment webhook has been configured. Flutterwave credentials and verified account onboarding are required before live payment functions can be deployed.
 
 ## Provider references
 
