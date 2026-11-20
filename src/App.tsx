@@ -475,7 +475,7 @@ function Dashboard({ business, products, orders, payments, reservations, reserva
   const [appointmentsLoading, setAppointmentsLoading] = useState(true);
   const [appointmentsError, setAppointmentsError] = useState("");
   const paid = orders.reduce((s, o) => s + Number(o.amount_paid_minor || 0), 0);
-  const due = orders.reduce((s, o) => s + Math.max(0, Number(o.total_amount_minor || 0) - Number(o.amount_paid_minor || 0)), 0);
+  const due = orders.filter(o => o.status !== "cancelled").reduce((s, o) => s + Math.max(0, Number(o.total_amount_minor || 0) - Number(o.amount_paid_minor || 0)), 0);
   const awaiting = orders.filter(o => ["new", "processing"].includes(o.status)).length;
   const pendingReservations = reservations.filter(r => ["pending", "new"].includes(r.status)).length;
   const url = window.location.origin + "/store/" + business.slug;
