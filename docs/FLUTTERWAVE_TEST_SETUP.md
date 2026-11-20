@@ -16,7 +16,7 @@ Set these in the current Supabase project under Edge Function secrets:
 
 - `FLW_SECRET_KEY`: Flutterwave **TEST** secret key (normally starts with `FLWSECK_TEST-`).
 - `FLW_WEBHOOK_HASH`: a long random webhook signing value. Set the exact same value in Flutterwave's webhook settings.
-- `ORDERPING_PUBLIC_URL`: optional; set to `https://orderping.vercel.app`. The checkout function has this default.
+- `ORDERPING_PUBLIC_URL`: set to the current development preview alias: `https://orderping-git-feat-ord-38cb73-edwinchukwuemeka12-5970s-projects.vercel.app`. This ensures the Flutterwave redirect returns to the preview app during sandbox testing. Change it to `https://orderping.vercel.app` only during the approved production release.
 
 Do not place any of these in GitHub, the React app, Vercel client-side environment variables, or a chat message. Never use the Flutterwave live secret key for sandbox testing.
 
