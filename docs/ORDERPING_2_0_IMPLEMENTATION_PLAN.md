@@ -12,7 +12,7 @@
 ## Product and settlement invariants
 
 1. Vendors own their customer relationships, orders, catalogue and fulfilment.
-2. OrderPing does not hold vendor sales proceeds. Payment design must support provider-managed vendor subaccounts/split settlement, subject to Flutterwave's current Nigeria onboarding and settlement rules. Flutterwave documents that subaccount proceeds settle according to the configured settlement cycle; this is not a promise of instant bank payout. Marketplace operators remain responsible for vetting merchants and handling disputes/chargebacks.
+2. OrderPing earns through subscriptions only. Vendors receive 100% of the split allocation for customer sales; OrderPing's platform commission is zero. Vendor settlement uses a Flutterwave subaccount configured with `split_type: percentage` and `split_value: 1.0` (100%). Flutterwave processing fees and any applicable statutory deductions remain subject to provider terms. OrderPing does not hold vendor sales proceeds. Flutterwave documents that subaccount proceeds settle according to the configured settlement cycle; this is not a promise of instant bank payout. Marketplace operators remain responsible for vetting merchants and handling disputes/chargebacks.
 3. The server creates checkout sessions and generates unpredictable unique transaction references.
 4. The browser redirect is not proof of payment. A payment becomes successful only after server-side provider verification and a verified webhook/reconciliation check.
 5. Provider event handling must be idempotent. A repeated webhook must never create a second ledger payment.
@@ -43,9 +43,9 @@ Migration `20261120091118_orderping_payment_foundation.sql` introduces:
 
 Migrations `20261120091118_orderping_payment_foundation.sql`, `20261120091206_orderping_atomic_verified_payment_recording.sql` and `20261120091220_orderping_require_active_vendor_for_online_payment.sql` have been applied to the current Supabase project. The three new tables are empty. The database finalizer is service-role-only, checks vendor approval, active subaccount, order status, amount and currency, and writes one online payment into the existing `payment_records` ledger atomically. These changes are additive; existing orders, manual payment records, appointment flows and other MEKA Logic schemas were not modified.
 
-## Phase 2 — server-side payment functions (partially implemented)
+## Phase 2 — server-side payment functions (code added to the development branch)
 
-The database-only atomic finalizer `orderping.finalize_flutterwave_payment(...)` is implemented and restricted to `service_role`. It is not callable by browser clients. Edge Functions still need to create transactions, manage provider subaccounts, verify provider responses and call this finalizer only after independent verification.
+The database atomic finalizer `orderping.finalize_flutterwave_payment(...)` is implemented and restricted to `service_role`. New branch-only Edge Function source has been added for authenticated vendor bank verification/subaccount registration, guest order checkout initialization, redirect-side transaction verification, and signed Flutterwave webhook handling. These functions have not been deployed to Supabase yet. They must be tested in Flutterwave test mode before deployment.
 
 Implement and test, before enabling production checkout:
 
