@@ -12,7 +12,7 @@
 ## Product and settlement invariants
 
 1. Vendors own their customer relationships, orders, catalogue and fulfilment.
-2. OrderPing does not hold vendor sales proceeds. Payment design must support provider-managed vendor subaccounts/direct split settlement, subject to Flutterwave's current Nigeria onboarding and settlement rules.
+2. OrderPing does not hold vendor sales proceeds. Payment design must support provider-managed vendor subaccounts/split settlement, subject to Flutterwave's current Nigeria onboarding and settlement rules. Flutterwave documents that subaccount proceeds settle according to the configured settlement cycle; this is not a promise of instant bank payout. Marketplace operators remain responsible for vetting merchants and handling disputes/chargebacks.
 3. The server creates checkout sessions and generates unpredictable unique transaction references.
 4. The browser redirect is not proof of payment. A payment becomes successful only after server-side provider verification and a verified webhook/reconciliation check.
 5. Provider event handling must be idempotent. A repeated webhook must never create a second ledger payment.
@@ -34,16 +34,18 @@
 
 ## Phase 1 — payment data foundation
 
-Migration `20261120120000_orderping_payment_foundation.sql` introduces:
+Migration `20261120091118_orderping_payment_foundation.sql` introduces:
 
 - `vendor_payment_accounts`: provider subaccount reference and minimal account metadata. No full bank account number or credentials.
 - `payment_transactions`: provider checkout and transaction lifecycle, linked to a business and order.
 - `payment_webhook_events`: provider event idempotency and processing audit trail.
 - RLS read policies for the owning vendor; writes restricted to service_role.
 
-This migration is additive. It does not change current orders, manual payment records, appointment flows, or other MEKA Logic schemas.
+Migrations `20261120091118_orderping_payment_foundation.sql`, `20261120091206_orderping_atomic_verified_payment_recording.sql` and `20261120091220_orderping_require_active_vendor_for_online_payment.sql` have been applied to the current Supabase project. The three new tables are empty. The database finalizer is service-role-only, checks vendor approval, active subaccount, order status, amount and currency, and writes one online payment into the existing `payment_records` ledger atomically. These changes are additive; existing orders, manual payment records, appointment flows and other MEKA Logic schemas were not modified.
 
-## Phase 2 — server-side payment functions (not yet implemented)
+## Phase 2 — server-side payment functions (partially implemented)
+
+The database-only atomic finalizer `orderping.finalize_flutterwave_payment(...)` is implemented and restricted to `service_role`. It is not callable by browser clients. Edge Functions still need to create transactions, manage provider subaccounts, verify provider responses and call this finalizer only after independent verification.
 
 Implement and test, before enabling production checkout:
 
@@ -84,4 +86,11 @@ The payment ledger write must use the actual business owner as recorded_by, pres
 
 ## Current implementation boundary
 
-The payment foundation migration is schema preparation only. It does not enable live Flutterwave checkout, create provider subaccounts, send money, or process webhooks. Flutterwave credentials and verified account onboarding are required for those steps.
+The database foundation and atomic ledger finalizer are deployed, but live Flutterwave checkout is not enabled. No provider subaccounts have been created, no money has been moved, and no payment webhook is active. Flutterwave credentials and verified account onboarding are required before live payment functions can be deployed.
+
+## Provider references
+
+- [Flutterwave split payments and subaccounts](https://developer.flutterwave.com/docs/split-payments)
+- [Flutterwave webhook signature verification](https://developer.flutterwave.com/docs/webhooks)
+- [Flutterwave transaction verification](https://developer.flutterwave.com/docs/transaction-verification)
+- [Flutterwave NGN bank transfer](https://developer.flutterwave.com/docs/collections-inflow/bank-transfer/ngn)
