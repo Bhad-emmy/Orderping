@@ -28,6 +28,17 @@ Deno.serve(async (req: Request) => {
     const secret = Deno.env.get("FLW_SECRET_KEY");
     if (!url || !service || !secret) return json({ error: "Payment verification is not configured." }, 503);
     const db = createClient(url, service, { db: { schema: "orderping" }, auth: { persistSession: false, autoRefreshToken: false } });
+    const ip = (req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || "unknown").slice(0, 120);
+    for (const key of ["flw-verify:ip:" + ip, "flw-verify:ref:" + txRef]) {
+      const bucket = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(key));
+      const bucketKey = [...new Uint8Array(bucket)].map((b) => b.toString(16).padStart(2, "0")).join("");
+      const { data: rateData, error: rateError } = await db.rpc("consume_rate_limit", {
+        p_bucket_key: bucketKey, p_limit: 20, p_window_seconds: 60,
+      });
+      if (rateError) return json({ error: "Payment verification is temporarily unavailable." }, 503);
+      const rate = Array.isArray(rateData) ? rateData[0] : rateData;
+      if (!rate?.allowed) return json({ error: "Too many verification attempts. Wait a minute and try again." }, 429);
+    }
 
     const { data: transaction, error: transactionError } = await db.from("payment_transactions")
       .select("id,tx_ref,amount_minor,currency_code,status,provider_transaction_id")
