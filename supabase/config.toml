@@ -13,3 +13,17 @@ verify_jwt = false
 
 [functions.vendor-signup]
 verify_jwt = false
+
+# OrderPing Flutterwave integration. Public endpoints authenticate or verify
+# their own inputs and must never trust browser-supplied payment state.
+[functions.vendor-payment-account]
+verify_jwt = true
+
+[functions.flutterwave-checkout]
+verify_jwt = false
+
+[functions.flutterwave-verify-payment]
+verify_jwt = false
+
+[functions.flutterwave-webhook]
+verify_jwt = false
