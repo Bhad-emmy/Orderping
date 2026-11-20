@@ -47,7 +47,7 @@ Deno.serve(async (req: Request) => {
     const ip = (req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || "unknown").slice(0, 120);
     const { data: rate, error: rateError } = await db.rpc("consume_rate_limit", {
       p_bucket_key: await sha256("vendor-flw-account:" + authData.user.id + ":" + ip),
-      p_limit: 5, p_window_seconds: 3600,
+      p_limit: 30, p_window_seconds: 3600,
     });
     if (rateError) return json({ error: "Payment settings are temporarily unavailable." }, 503);
     const allowance = Array.isArray(rate) ? rate[0] : rate;
