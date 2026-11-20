@@ -98,8 +98,8 @@ Deno.serve(async (req: Request) => {
     }, { onConflict: "business_id,provider" }).select("id").single();
     if (pendingError || !pending) return json({ error: "Could not prepare your settlement account." }, 500);
 
-    // 1.0 means 100% of the split allocation goes to the vendor subaccount.
-    // OrderPing's platform commission is zero; Flutterwave processing fees remain provider fees.
+    // Flutterwave defines split_value as the platform commission, not the vendor share.
+    // 0.0 means OrderPing takes no sales commission; the vendor receives the full split allocation.
     const created = await flw("/subaccounts", secret, "POST", {
       account_bank: bankCode,
       account_number: accountNumber,
@@ -108,7 +108,7 @@ Deno.serve(async (req: Request) => {
       business_mobile: mobile,
       country: "NG",
       split_type: "percentage",
-      split_value: 1.0,
+      split_value: 0.0,
     });
     const subaccountId = created.payload?.data?.subaccount_id;
     if (!created.ok || typeof subaccountId !== "string" || !subaccountId.startsWith("RS_")) {
