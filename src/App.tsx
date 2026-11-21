@@ -579,9 +579,6 @@ function Dashboard({ business, products, orders, payments, reservations, reserva
     <div className="bottom-note"><span><Clock3 size={15} /> Reservations</span>{reservationUnavailable ? "Reservation service is currently unavailable." : pendingReservations + " pending · " + reservations.length + " total requests"}{!demoMode && <button className="text-link" onClick={() => onNavigate("/app/reservations")}>View reservations <ArrowRight size={13} /></button>}</div>
   </>;
 }
-function MetricCard({ label, value, note, icon, tone, trend }: { label: string; value: string; note: string; icon: ReactNode; tone: string; trend: string }) {
-  return <div className="metric-card"><div className="metric-top"><span className={"metric-icon " + tone}>{icon}</span><span className="metric-trend">{trend}</span></div><span className="metric-label">{label}</span><strong className="metric-value">{value}</strong><span className="metric-note">{note}</span></div>;
-}
 function CustomerCell({ name, detail }: { name: string; detail: string }) {
   return <div className="customer-cell"><span className="customer-avatar">{initials(name)}</span><span><strong>{name}</strong><small>{detail}</small></span></div>;
 }
