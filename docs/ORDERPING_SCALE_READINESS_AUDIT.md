@@ -11,7 +11,7 @@ OrderPing's current React/Vite + Vercel + Supabase architecture can be evolved t
 
 The largest architectural concern is not the absence of multiple web servers. It is that OrderPing currently shares one Supabase project/database with other MEKA applications, and the vendor dashboard downloads the complete order and payment history to compute summary figures. Those choices create shared-resource contention and unnecessary database/network work as usage grows.
 
-**Recommendation:** keep Vercel for the frontend, move OrderPing to a dedicated Supabase project before meaningful scale, optimise the read paths and schema, add a durable background-job path, and prove capacity with staged load tests. Do not add read replicas, Redis, or separately managed application servers until measurements show they are needed.
+**Recommendation:** keep Vercel and the existing shared Supabase project for now. Continue using only the `orderping` schema and its existing functions. Optimise the most obvious bottlenecks with small, targeted changes and validate capacity with staged tests. A dedicated Supabase project is a later migration, to be considered when the user has provisioned one or measured usage makes isolation necessary. Do not add Redis, extra servers, queues or other infrastructure unless a demonstrated requirement justifies the added complexity.
 
 ## 1. Current-state findings
 
@@ -91,7 +91,7 @@ Measure these from representative Lagos mobile networks and realistic test devic
 - Avoid creating a second set of manually managed web servers merely to increase the server count.
 
 ### Database
-- Create a dedicated Supabase project for OrderPing, with a deliberate region decision and an appropriately sized database compute tier.
+- Continue using the current shared Supabase project for now. Keep all OrderPing database changes strictly inside the `orderping` schema and avoid project-wide settings changes that could affect other applications. Plan a dedicated project only when one is available and a migration is approved.
 - Keep PostgreSQL as the source of truth. Use Supabase connection pooling for server-side connections and avoid opening one direct database connection per request.
 - Preserve tenant-scoped RLS, constraints, transaction integrity and payment idempotency.
 - Add only measured indexes for business-scoped filters, status/date sorting, foreign-key joins and high-volume lookup paths.
@@ -137,24 +137,15 @@ Measure these from representative Lagos mobile networks and realistic test devic
 
 **Exit:** dashboard queries have bounded result sizes; mobile performance targets are met at low/moderate load; all query plans reviewed.
 
-### Phase 2 — Isolate OrderPing infrastructure
-1. Provision a separate Supabase project for OrderPing; choose the region using latency measurements from Nigeria and the provider's available-region options.
-2. Recreate only the OrderPing schema, grants, RLS policies, functions/triggers, extensions and required storage configuration.
-3. Migrate OrderPing rows, Auth users/identity configuration as applicable, storage objects, Edge Functions and their environment secrets through a controlled migration.
-4. Verify all foreign keys, payment ledger consistency, customer tracking links, booking/order flows and vendor login in staging.
-5. Run read-only reconciliation and application smoke tests before cutover.
-6. Plan a maintenance window or a carefully tested low-downtime cutover; keep a rollback path to the original project until verification is complete.
+### Phase 2 — Dedicated database (deferred)
+Do not start this phase now. When a separate Supabase project is available and the user approves the migration, prepare a minimal, OrderPing-only migration and verify Auth, Storage, Edge Functions, secrets, RLS, payment ledger consistency and storefront/order/booking flows before cutover.
 
 **Critical constraint:** do not migrate, modify, or delete unrelated schemas, users, functions, storage buckets or data belonging to Predivic School, Oka Rides, MEKA Apply or other applications. Do not assume that copying only the `orderping` schema is sufficient; Auth, Storage, Edge Functions, secrets, API exposure and project-level Auth settings require separate handling.
 
 **Exit:** OrderPing runs independently in staging, with validated tenant isolation and reconciled data.
 
-### Phase 3 — Resilience and background work
-1. Introduce durable asynchronous jobs for notifications, retries and reports.
-2. Add provider-specific timeouts, retry budgets, exponential backoff and dead-letter review.
-3. Add idempotency keys and concurrency controls to all externally retried write paths.
-4. Add shared caching only where instrumentation shows a material benefit.
-5. Define backup/restore, deployment rollback and incident response procedures.
+### Phase 3 — Reliability (only as needed)
+Keep the current implementation where it is adequate. Add retries, job processing or caching only when a specific failure or measured bottleneck requires it. Preserve payment idempotency and define a basic rollback and backup procedure.
 
 **Exit:** background jobs recover from worker restarts and provider outages without duplicate notifications, orders or payments.
 
@@ -191,10 +182,12 @@ Use unique synthetic tenant IDs and realistic data distribution. Include hot ten
 - Initial target: **1,000 concurrent active users**.
 - First growth milestone: **10,000 registered users**.
 - Preserve the current React/Vite + Vercel + Supabase architecture unless measurements demonstrate a specific limitation.
-- Prioritise dedicated OrderPing database isolation and removal of unbounded dashboard reads before adding product features.
+- Keep the shared Supabase project for now. Prioritise small, high-impact fixes to unbounded dashboard reads and frontend loading before adding product features. Revisit database separation when a new project is available.
 - Do not weaken RLS, tenant isolation, payment idempotency, server-side validation or rate limiting for performance.
 - Do not alter the Predivic School project/database or unrelated schemas in the shared Supabase project.
-- Do not make production migrations, change Supabase plans, purchase infrastructure, or switch regions without a separate reviewed change plan and explicit approval.
+- Keep using the shared Supabase project until a separate one is available. Do not modify unrelated schemas or project-wide settings.
+- Do not add infrastructure, introduce complex abstractions, change plans or perform migrations without a clear need and explicit approval.
+- Prefer the smallest safe implementation that solves the immediate problem.
 
 ## 7. Audit evidence and limitations
 
