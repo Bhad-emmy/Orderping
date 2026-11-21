@@ -273,7 +273,7 @@ function VendorApp({ user }: { user: User }) {
   const [productModal, setProductModal] = useState(false); const [editingProduct, setEditingProduct] = useState<Product | null>(null); const [saving, setSaving] = useState(false);
   const [productForm, setProductForm] = useState({ name: "", description: "", price: "", original_price: "", active: true, image_url: "" }); const [productImage, setProductImage] = useState<File | null>(null);
   const [businessForm, setBusinessForm] = useState({ name: "", slug: "", email: "", whatsapp: "" });
-  const [paymentOrder, setPaymentOrder] = useState<Order | null>(null); const [activationPin, setActivationPin] = useState(""); const [pinSaving, setPinSaving] = useState(false); const [paymentValue, setPaymentValue] = useState(""); const [paymentMethod, setPaymentMethod] = useState<PaymentRecord["method"]>("bank_transfer"); const [paymentReference, setPaymentReference] = useState(""); const [paymentNote, setPaymentNote] = useState(""); const [paymentRecords, setPaymentRecords] = useState<PaymentRecord[]>([]); const [reservationUnavailable, setReservationUnavailable] = useState(false);
+  const [paymentOrder, setPaymentOrder] = useState<Order | null>(null); const [paymentValue, setPaymentValue] = useState(""); const [paymentMethod, setPaymentMethod] = useState<PaymentRecord["method"]>("bank_transfer"); const [paymentReference, setPaymentReference] = useState(""); const [paymentNote, setPaymentNote] = useState(""); const [paymentRecords, setPaymentRecords] = useState<PaymentRecord[]>([]); const [reservationUnavailable, setReservationUnavailable] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!supabase) return;
