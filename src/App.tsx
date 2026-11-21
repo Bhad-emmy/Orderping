@@ -85,8 +85,8 @@ function LandingPage({ signedIn }: { signedIn: boolean }) {
         <a href="#contact">Contact</a>
       </nav>
       <div className="landing-nav-actions">
-        <Link className="landing-login-link" to={signedIn ? "/app" : "/login"}>{signedIn ? "Open dashboard" : "Sign in"}</Link>
-        <Link className="button primary" to={signedIn ? "/app" : "/login"}>{signedIn ? "Go to dashboard" : "Get started"} <ArrowRight size={15} /></Link>
+        <Link className="landing-login-link" to={signedIn ? "/app" : "/login?mode=signup"}>{signedIn ? "Open dashboard" : "Sign in"}</Link>
+        <Link className="button primary" to={signedIn ? "/app" : "/login?mode=signup"}>{signedIn ? "Go to dashboard" : "Get started"} <ArrowRight size={15} /></Link>
       </div>
     </header>
     <section className="landing-hero">
@@ -95,7 +95,7 @@ function LandingPage({ signedIn }: { signedIn: boolean }) {
         <h1>Turn your catalogue into <em>your next order.</em></h1>
         <p>Give customers one place to browse your products, place orders or request appointments. Manage orders, bookings and payment records from one business workspace.</p>
         <div className="landing-hero-actions">
-          <Link className="button primary landing-primary" to={signedIn ? "/app" : "/login"}>{signedIn ? "Open your dashboard" : "Create your vendor account"} <ArrowRight size={17} /></Link>
+          <Link className="button primary landing-primary" to={signedIn ? "/app" : "/login?mode=signup"}>{signedIn ? "Open your dashboard" : "Create your vendor account"} <ArrowRight size={17} /></Link>
           <a className="button secondary landing-secondary" href="#how-it-works"><span className="landing-play">↘</span> See how it works</a>
         </div>
         <div className="landing-trust-line"><CheckCircle2 size={16} /> Guest checkout <span /> Customers do not need an account</div>
@@ -127,10 +127,10 @@ function LandingPage({ signedIn }: { signedIn: boolean }) {
       <div className="landing-steps"><article><span className="landing-step-number">01</span><span className="landing-step-icon"><Store size={21} /></span><h3>Set up your storefront and booking page</h3><p>Add your business details, products or services, and the times customers can request appointments.</p></article><article><span className="landing-step-number">02</span><span className="landing-step-icon"><ExternalLink size={21} /></span><h3>Share your link</h3><p>Send your storefront or booking link on WhatsApp, Instagram, or wherever customers find you.</p></article><article><span className="landing-step-number">03</span><span className="landing-step-icon"><ClipboardList size={21} /></span><h3>Manage orders and bookings</h3><p>Review customer orders, handle appointment requests, and keep payment records up to date.</p></article></div>
     </section>
     <section className="landing-feature-section" id="features">
-      <div className="landing-feature-intro"><span className="eyebrow">MADE FOR DAILY BUSINESS</span><h2>Sell, book and stay organised.</h2><p>OrderPing brings your customer-facing storefront and the work behind it into one place, whether customers find you through social media or word of mouth.</p><Link className="text-link" to={signedIn ? "/app" : "/login"}>{signedIn ? "Go to your workspace" : "Start with OrderPing"} <ArrowRight size={15} /></Link></div>
+      <div className="landing-feature-intro"><span className="eyebrow">MADE FOR DAILY BUSINESS</span><h2>Sell, book and stay organised.</h2><p>OrderPing brings your customer-facing storefront and the work behind it into one place, whether customers find you through social media or word of mouth.</p><Link className="text-link" to={signedIn ? "/app" : "/login?mode=signup"}>{signedIn ? "Go to your workspace" : "Start with OrderPing"} <ArrowRight size={15} /></Link></div>
       <div className="landing-features-grid"><article><span className="landing-feature-icon violet"><ShoppingCart size={20} /></span><h3>Order management</h3><p>See customer details, order status and fulfilment without searching through chats.</p></article><article><span className="landing-feature-icon mint"><Wallet size={20} /></span><h3>Payment records and balances</h3><p>Record payments received and keep outstanding customer balances visible.</p></article><article><span className="landing-feature-icon peach"><CalendarDays size={20} /></span><h3>Appointment booking</h3><p>Publish your services and available times so customers can request an appointment from a dedicated booking page.</p></article><article><span className="landing-feature-icon blue"><Clock3 size={20} /></span><h3>Product reservations</h3><p>Keep product reservation requests separate from standard orders, including each customer's requested pickup time.</p></article><article><span className="landing-feature-icon violet"><Store size={20} /></span><h3>Shareable storefront</h3><p>Customers browse your catalogue and submit orders as guests, without creating an account.</p></article><article><span className="landing-feature-icon mint"><CreditCard size={20} /></span><h3>Your sales stay yours</h3><p>OrderPing is built around subscription revenue, not taking a percentage of your customer sales.</p></article></div>
     </section>
-    <section className="landing-cta"><div><span className="eyebrow">READY WHEN YOU ARE</span><h2>Bring your business into one workspace.</h2><p>Share your storefront and booking page, then manage customer activity from one place.</p></div><Link className="button primary landing-primary" to={signedIn ? "/app" : "/login"}>{signedIn ? "Open dashboard" : "Create your vendor account"} <ArrowRight size={17} /></Link></section>
+    <section className="landing-cta"><div><span className="eyebrow">READY WHEN YOU ARE</span><h2>Bring your business into one workspace.</h2><p>Share your storefront and booking page, then manage customer activity from one place.</p></div><Link className="button primary landing-primary" to={signedIn ? "/app" : "/login?mode=signup"}>{signedIn ? "Open dashboard" : "Create your vendor account"} <ArrowRight size={17} /></Link></section>
     <WhatsAppContactForm />
     <footer className="landing-footer"><Brand /><span>Orders made simpler.</span><div><a href="https://wa.me/2349066929361" target="_blank" rel="noreferrer">WhatsApp us</a><Link to="/login">Vendor sign in</Link><span>© {new Date().getFullYear()} OrderPing</span></div></footer>
   </main>;
@@ -173,7 +173,8 @@ function FullLoader({ label }: { label: string }) {
   return <div className="full-loader"><span className="spinner"><LoaderCircle size={22} /></span><span>{label}</span></div>;
 }
 function AuthScreen() {
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const location = useLocation();
+  const [mode, setMode] = useState<"login" | "signup">(() => new URLSearchParams(location.search).get("mode") === "signup" ? "signup" : "login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -190,10 +191,24 @@ function AuthScreen() {
         if (authError) throw authError;
         navigate("/app");
       } else {
+        // Existing shared-Supabase users can use their current identity for OrderPing.
+        // A successful password sign-in takes them straight to the fresh-store onboarding.
+        const { error: existingLoginError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+        if (!existingLoginError) {
+          navigate("/app");
+          return;
+        }
+
         const { data: signup, error: signupError } = await supabase.functions.invoke("vendor-signup", {
           body: { email: email.trim(), password },
         });
-        if (signupError) throw signupError;
+        if (signupError) {
+          const status = (signupError as { context?: Response }).context?.status;
+          if (status === 409) {
+            throw new Error("An account with this email already exists. Switch to Sign in and use your existing password to continue.");
+          }
+          throw signupError;
+        }
         if (!signup?.success) throw new Error(signup?.error || "Signup could not be completed.");
         const { error: loginError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (loginError) throw loginError;
