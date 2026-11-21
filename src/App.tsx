@@ -546,10 +546,17 @@ function Dashboard({ business, products, orders, payments, reservations, reserva
   const dateRange = new Intl.DateTimeFormat("en-NG", { day: "numeric", month: "short" });
   const dayLabel = (date: Date) => new Intl.DateTimeFormat("en-NG", { weekday: "short" }).format(date);
   return <>
-    <div className="welcome-strip"><div><span className="welcome-kicker">✦ YOUR STORE, AT A GLANCE</span><h2>Good business starts here.</h2><p>Here’s what’s happening with {business.name} today.</p></div><div className="welcome-art"><div className="art-circle circle-one" /><div className="art-circle circle-two" /><div className="art-card"><ShoppingBag size={23} /><span>Orders</span><strong>{String(orders.length).padStart(2, "0")}</strong></div></div></div>
-    {!demoMode && <div className="quick-actions"><button className="button primary" onClick={onAddProduct}><Plus size={17} /> Add product</button><button className="button secondary" onClick={() => onNavigate("/app/orders")}><ShoppingCart size={16} /> View orders <ArrowRight size={15} /></button><button className="button secondary" onClick={() => { void navigator.clipboard?.writeText(url); }}><ExternalLink size={15} /> Copy store link</button></div>}
-    <div className="section-heading"><div><h2>Business overview</h2><p>Live totals across your recorded business activity</p></div><span className="period-pill"><Activity size={14} /> All time</span></div>
-    <div className="metric-grid"><MetricCard label="Total orders" value={String(orders.length)} note={awaiting + " need attention"} icon={<ShoppingCart size={19} />} tone="blue" trend="Order volume" /><MetricCard label="Payments received" value={money(paid)} note="Recorded against customer orders" icon={<Wallet size={19} />} tone="green" trend="Collected" /><MetricCard label="Outstanding balance" value={money(due)} note="Across all non-cancelled orders" icon={<CreditCard size={19} />} tone="orange" trend="To collect" /><MetricCard label="Live products" value={String(products.filter(p => p.is_active).length)} note={products.length + " total products"} icon={<Package size={19} />} tone="purple" trend="Catalogue" /></div>
+    <div className="dashboard-intro">
+      <div><span className="eyebrow">BUSINESS WORKSPACE</span><h1>{business.name}</h1><p>Your business activity, orders and customer payments in one place.</p></div>
+      {!demoMode && <div className="dashboard-actions"><button className="button primary" onClick={onAddProduct}><Plus size={16} /> Add product</button><button className="button secondary" onClick={() => onNavigate("/app/orders")}>View orders <ArrowRight size={14} /></button><button className="button secondary" onClick={() => { void navigator.clipboard?.writeText(url); }}>Copy store link <ExternalLink size={14} /></button></div>}
+    </div>
+    <div className="dashboard-kpis" aria-label="Business summary">
+      <div className="dashboard-kpi"><span>Total orders</span><strong>{orders.length}</strong><small>{awaiting} awaiting action</small></div>
+      <div className="dashboard-kpi"><span>Payments received</span><strong>{money(paid)}</strong><small>Recorded against orders</small></div>
+      <div className="dashboard-kpi"><span>Outstanding balance</span><strong>{money(due)}</strong><small>Across non-cancelled orders</small></div>
+      <div className="dashboard-kpi"><span>Live products</span><strong>{products.filter(p => p.is_active).length}</strong><small>{products.length} catalogue items</small></div>
+    </div>
+    <div className="section-heading dashboard-section-heading"><div><h2>Activity</h2><p>Recent payments and items requiring a response</p></div><span className="period-pill">Last 7 days · All-time balances</span></div>
     <div className="dashboard-insights-grid">
       <section className="panel sales-panel">
         <div className="panel-heading"><div><h3>Payment activity</h3><p>Customer payments recorded over the last seven days</p></div><span className="sales-total">{money(last7Total)}</span></div>
