@@ -85,20 +85,20 @@ function LandingPage({ signedIn }: { signedIn: boolean }) {
         <a href="#contact">Contact</a>
       </nav>
       <div className="landing-nav-actions">
-        <Link className="landing-login-link" to={signedIn ? "/app" : "/login"}>{signedIn ? "Open dashboard" : "Sign in"}</Link>
-        <Link className="button primary" to={signedIn ? "/app" : "/login"}>{signedIn ? "Go to dashboard" : "Get started"} <ArrowRight size={15} /></Link>
+        <Link className="landing-login-link" to={signedIn ? "/app" : "/login?mode=signup"}>{signedIn ? "Open dashboard" : "Sign in"}</Link>
+        <Link className="button primary" to={signedIn ? "/app" : "/login?mode=signup"}>{signedIn ? "Go to dashboard" : "Get started"} <ArrowRight size={15} /></Link>
       </div>
     </header>
     <section className="landing-hero">
       <div className="landing-copy">
-        <span className="landing-kicker"><span className="landing-kicker-dot" /> SIMPLE ORDER MANAGEMENT FOR SMALL BUSINESSES</span>
+        <span className="landing-kicker"><span className="landing-kicker-dot" /> STOREFRONTS, ORDERS &amp; APPOINTMENT BOOKING</span>
         <h1>Turn your catalogue into <em>your next order.</em></h1>
-        <p>Share one clean store link. Let customers place orders or request reservations. Keep every order and payment record organised in one workspace.</p>
+        <p>Give customers one place to browse your products, place orders or request appointments. Manage orders, bookings and payment records from one business workspace.</p>
         <div className="landing-hero-actions">
-          <Link className="button primary landing-primary" to={signedIn ? "/app" : "/login"}>{signedIn ? "Open your dashboard" : "Create your vendor account"} <ArrowRight size={17} /></Link>
+          <Link className="button primary landing-primary" to={signedIn ? "/app" : "/login?mode=signup"}>{signedIn ? "Open your dashboard" : "Create your vendor account"} <ArrowRight size={17} /></Link>
           <a className="button secondary landing-secondary" href="#how-it-works"><span className="landing-play">↘</span> See how it works</a>
         </div>
-        <div className="landing-trust-line"><CheckCircle2 size={16} /> Customers order as guests <span /> No payment processing required</div>
+        <div className="landing-trust-line"><CheckCircle2 size={16} /> Guest checkout <span /> Customers do not need an account</div>
       </div>
       <div className="landing-visual" aria-label="Illustration of an OrderPing vendor dashboard">
         <div className="visual-glow" />
@@ -108,29 +108,29 @@ function LandingPage({ signedIn }: { signedIn: boolean }) {
             <div className="visual-sidebar"><span className="visual-sidebar-brand" /><span className="visual-sidebar-active" /><span /><span /><span /><span /></div>
             <div className="visual-dashboard">
               <div className="visual-greeting"><div><small>YOUR BUSINESS AT A GLANCE</small><strong>Good morning, vendor</strong></div><span className="visual-avatar">OP</span></div>
-              <div className="visual-summary"><div><span>Open orders</span><strong>08</strong><i>↗ Today</i></div><div><span>Reservations</span><strong>04</strong><i>↗ Pending</i></div></div>
+              <div className="visual-summary"><div><span>Open orders</span><strong>08</strong><i>↗ Today</i></div><div><span>Appointments</span><strong>04</strong><i>↗ Upcoming</i></div></div>
               <div className="visual-orders-head"><strong>Recent orders</strong><span>View all</span></div>
               <div className="visual-order-row"><span className="visual-product-dot peach" /><span className="visual-order-lines"><b>Everyday essentials</b><small>Customer order · #OP-1042</small></span><span className="visual-order-pill">New</span></div>
               <div className="visual-order-row"><span className="visual-product-dot blue" /><span className="visual-order-lines"><b>Classic tote bag</b><small>Customer order · #OP-1041</small></span><span className="visual-order-pill processing">Processing</span></div>
               <div className="visual-order-row"><span className="visual-product-dot green" /><span className="visual-order-lines"><b>Daily care bundle</b><small>Customer order · #OP-1040</small></span><span className="visual-order-pill ready">Ready</span></div>
             </div>
           </div>
-          <div className="visual-bottom-note"><CheckCircle2 size={14} /> One place for orders, reservations and payment records</div>
+          <div className="visual-bottom-note"><CheckCircle2 size={14} /> Orders, appointments and payment records together</div>
         </div>
         <div className="floating-note floating-note-top"><span className="floating-note-icon violet"><ShoppingBag size={17} /></span><span><b>New order received</b><small>Customer checkout complete</small></span><Check size={16} /></div>
         <div className="floating-note floating-note-bottom"><span className="floating-note-icon mint"><Wallet size={17} /></span><span><b>Payment record updated</b><small>Balance tracked in one view</small></span><Check size={16} /></div>
       </div>
     </section>
-    <div className="landing-proof-strip"><div><strong>One link</strong><span>Share your catalogue</span></div><div><strong>Guest checkout</strong><span>No customer account needed</span></div><div><strong>Order clarity</strong><span>Track fulfilment status</span></div><div><strong>Payment ledger</strong><span>Know what is still due</span></div></div>
+    <div className="landing-proof-strip"><div><strong>One business link</strong><span>Products and services</span></div><div><strong>Guest requests</strong><span>No customer account needed</span></div><div><strong>Appointments</strong><span>Online booking requests</span></div><div><strong>Payment records</strong><span>Track paid and outstanding</span></div></div>
     <section className="landing-section" id="how-it-works">
-      <div className="landing-section-heading"><span className="eyebrow">A SIMPLER WAY TO SELL</span><h2>From product list to organised orders.</h2><p>Keep the customer experience light and the admin work under control.</p></div>
-      <div className="landing-steps"><article><span className="landing-step-number">01</span><span className="landing-step-icon"><Store size={21} /></span><h3>Set up your storefront</h3><p>Add your business details and publish the products you want customers to see.</p></article><article><span className="landing-step-number">02</span><span className="landing-step-icon"><ExternalLink size={21} /></span><h3>Share one simple link</h3><p>Send your catalogue on WhatsApp, Instagram, or wherever your customers find you.</p></article><article><span className="landing-step-number">03</span><span className="landing-step-icon"><ClipboardList size={21} /></span><h3>Manage everything together</h3><p>Review incoming orders, respond to reservations, and record payments from your workspace.</p></article></div>
+      <div className="landing-section-heading"><span className="eyebrow">A SIMPLER WAY TO RUN YOUR BUSINESS</span><h2>From customer visit to completed order or booking.</h2><p>Customers can place an order, request a product reservation or book a service appointment, while you manage each request in one workspace.</p></div>
+      <div className="landing-steps"><article><span className="landing-step-number">01</span><span className="landing-step-icon"><Store size={21} /></span><h3>Set up your storefront and booking page</h3><p>Add your business details, products or services, and the times customers can request appointments.</p></article><article><span className="landing-step-number">02</span><span className="landing-step-icon"><ExternalLink size={21} /></span><h3>Share your link</h3><p>Send your storefront or booking link on WhatsApp, Instagram, or wherever customers find you.</p></article><article><span className="landing-step-number">03</span><span className="landing-step-icon"><ClipboardList size={21} /></span><h3>Manage orders and bookings</h3><p>Review customer orders, handle appointment requests, and keep payment records up to date.</p></article></div>
     </section>
     <section className="landing-feature-section" id="features">
-      <div className="landing-feature-intro"><span className="eyebrow">MADE FOR DAILY BUSINESS</span><h2>Less chasing. More clarity.</h2><p>OrderPing gives your day-to-day selling a clear home, whether your customers find you through social media or word of mouth.</p><Link className="text-link" to={signedIn ? "/app" : "/login"}>{signedIn ? "Go to your workspace" : "Start with OrderPing"} <ArrowRight size={15} /></Link></div>
-      <div className="landing-features-grid"><article><span className="landing-feature-icon violet"><ShoppingCart size={20} /></span><h3>Orders in one view</h3><p>See customer details, order status and fulfilment without searching through chats.</p></article><article><span className="landing-feature-icon mint"><Wallet size={20} /></span><h3>Manual payment tracking</h3><p>Record what has been received and keep outstanding balances visible.</p></article><article><span className="landing-feature-icon peach"><Clock3 size={20} /></span><h3>Product reservations</h3><p>Review and respond to requests from customers who want to reserve products.</p></article><article><span className="landing-feature-icon blue"><ShoppingBag size={20} /></span><h3>Customer-friendly storefront</h3><p>Customers browse and submit orders as guests, without creating an account.</p></article></div>
+      <div className="landing-feature-intro"><span className="eyebrow">MADE FOR DAILY BUSINESS</span><h2>Sell, book and stay organised.</h2><p>OrderPing brings your customer-facing storefront and the work behind it into one place, whether customers find you through social media or word of mouth.</p><Link className="text-link" to={signedIn ? "/app" : "/login?mode=signup"}>{signedIn ? "Go to your workspace" : "Start with OrderPing"} <ArrowRight size={15} /></Link></div>
+      <div className="landing-features-grid"><article><span className="landing-feature-icon violet"><ShoppingCart size={20} /></span><h3>Order management</h3><p>See customer details, order status and fulfilment without searching through chats.</p></article><article><span className="landing-feature-icon mint"><Wallet size={20} /></span><h3>Payment records and balances</h3><p>Record payments received and keep outstanding customer balances visible.</p></article><article><span className="landing-feature-icon peach"><CalendarDays size={20} /></span><h3>Appointment booking</h3><p>Publish your services and available times so customers can request an appointment from a dedicated booking page.</p></article><article><span className="landing-feature-icon blue"><Clock3 size={20} /></span><h3>Product reservations</h3><p>Keep product reservation requests separate from standard orders, including each customer's requested pickup time.</p></article><article><span className="landing-feature-icon violet"><Store size={20} /></span><h3>Shareable storefront</h3><p>Customers browse your catalogue and submit orders as guests, without creating an account.</p></article><article><span className="landing-feature-icon mint"><CreditCard size={20} /></span><h3>Your sales stay yours</h3><p>OrderPing is built around subscription revenue, not taking a percentage of your customer sales.</p></article></div>
     </section>
-    <section className="landing-cta"><div><span className="eyebrow">READY WHEN YOU ARE</span><h2>Give your orders a proper home.</h2><p>Start with your storefront, then manage each new order from one workspace.</p></div><Link className="button primary landing-primary" to={signedIn ? "/app" : "/login"}>{signedIn ? "Open dashboard" : "Create your vendor account"} <ArrowRight size={17} /></Link></section>
+    <section className="landing-cta"><div><span className="eyebrow">READY WHEN YOU ARE</span><h2>Bring your business into one workspace.</h2><p>Share your storefront and booking page, then manage customer activity from one place.</p></div><Link className="button primary landing-primary" to={signedIn ? "/app" : "/login?mode=signup"}>{signedIn ? "Open dashboard" : "Create your vendor account"} <ArrowRight size={17} /></Link></section>
     <WhatsAppContactForm />
     <footer className="landing-footer"><Brand /><span>Orders made simpler.</span><div><a href="https://wa.me/2349066929361" target="_blank" rel="noreferrer">WhatsApp us</a><Link to="/login">Vendor sign in</Link><span>© {new Date().getFullYear()} OrderPing</span></div></footer>
   </main>;
@@ -152,7 +152,7 @@ function WhatsAppContactForm() {
     window.open("https://wa.me/2349066929361?text=" + encodeURIComponent(text), "_blank", "noopener,noreferrer");
   }
   return <section className="landing-contact" id="contact">
-    <div className="landing-contact-copy"><span className="eyebrow">NEED A HAND?</span><h2>Talk to the OrderPing team.</h2><p>Send your enquiry through WhatsApp. We'll prepare your message and let you send it from your WhatsApp account.</p><a className="button secondary" href="https://wa.me/2349066929361" target="_blank" rel="noreferrer"><MessageCircle size={16} /> Chat on WhatsApp</a></div>
+    <div className="landing-contact-copy"><span className="eyebrow">NEED A HAND?</span><h2>Talk to the OrderPing team.</h2><p>Tell us what you need help with. Your enquiry will open in WhatsApp, ready for you to review and send.</p></div>
     <form className="landing-contact-form" onSubmit={submit}>
       <label>Your name<input required maxLength={120} value={name} onChange={e => setName(e.target.value)} placeholder="Full name" /></label>
       <label>Phone number<input required type="tel" maxLength={32} value={phone} onChange={e => setPhone(e.target.value)} placeholder="+234…" /></label>
@@ -173,7 +173,8 @@ function FullLoader({ label }: { label: string }) {
   return <div className="full-loader"><span className="spinner"><LoaderCircle size={22} /></span><span>{label}</span></div>;
 }
 function AuthScreen() {
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const location = useLocation();
+  const [mode, setMode] = useState<"login" | "signup">(() => new URLSearchParams(location.search).get("mode") === "signup" ? "signup" : "login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -190,10 +191,24 @@ function AuthScreen() {
         if (authError) throw authError;
         navigate("/app");
       } else {
+        // Existing shared-Supabase users can use their current identity for OrderPing.
+        // A successful password sign-in takes them straight to the fresh-store onboarding.
+        const { error: existingLoginError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+        if (!existingLoginError) {
+          navigate("/app");
+          return;
+        }
+
         const { data: signup, error: signupError } = await supabase.functions.invoke("vendor-signup", {
           body: { email: email.trim(), password },
         });
-        if (signupError) throw signupError;
+        if (signupError) {
+          const status = (signupError as { context?: Response }).context?.status;
+          if (status === 409) {
+            throw new Error("An account with this email already exists. Switch to Sign in and use your existing password to continue.");
+          }
+          throw signupError;
+        }
         if (!signup?.success) throw new Error(signup?.error || "Signup could not be completed.");
         const { error: loginError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (loginError) throw loginError;
@@ -546,10 +561,17 @@ function Dashboard({ business, products, orders, payments, reservations, reserva
   const dateRange = new Intl.DateTimeFormat("en-NG", { day: "numeric", month: "short" });
   const dayLabel = (date: Date) => new Intl.DateTimeFormat("en-NG", { weekday: "short" }).format(date);
   return <>
-    <div className="welcome-strip"><div><span className="welcome-kicker">✦ YOUR STORE, AT A GLANCE</span><h2>Good business starts here.</h2><p>Here’s what’s happening with {business.name} today.</p></div><div className="welcome-art"><div className="art-circle circle-one" /><div className="art-circle circle-two" /><div className="art-card"><ShoppingBag size={23} /><span>Orders</span><strong>{String(orders.length).padStart(2, "0")}</strong></div></div></div>
-    {!demoMode && <div className="quick-actions"><button className="button primary" onClick={onAddProduct}><Plus size={17} /> Add product</button><button className="button secondary" onClick={() => onNavigate("/app/orders")}><ShoppingCart size={16} /> View orders <ArrowRight size={15} /></button><button className="button secondary" onClick={() => { void navigator.clipboard?.writeText(url); }}><ExternalLink size={15} /> Copy store link</button></div>}
-    <div className="section-heading"><div><h2>Business overview</h2><p>Live totals across your recorded business activity</p></div><span className="period-pill"><Activity size={14} /> All time</span></div>
-    <div className="metric-grid"><MetricCard label="Total orders" value={String(orders.length)} note={awaiting + " need attention"} icon={<ShoppingCart size={19} />} tone="blue" trend="Order volume" /><MetricCard label="Payments received" value={money(paid)} note="Recorded against customer orders" icon={<Wallet size={19} />} tone="green" trend="Collected" /><MetricCard label="Outstanding balance" value={money(due)} note="Across all non-cancelled orders" icon={<CreditCard size={19} />} tone="orange" trend="To collect" /><MetricCard label="Live products" value={String(products.filter(p => p.is_active).length)} note={products.length + " total products"} icon={<Package size={19} />} tone="purple" trend="Catalogue" /></div>
+    <div className="dashboard-intro">
+      <div><span className="eyebrow">BUSINESS WORKSPACE</span><h1>{business.name}</h1><p>Your business activity, orders and customer payments in one place.</p></div>
+      {!demoMode && <div className="dashboard-actions"><button className="button primary" onClick={onAddProduct}><Plus size={16} /> Add product</button><button className="button secondary" onClick={() => onNavigate("/app/orders")}>View orders <ArrowRight size={14} /></button><button className="button secondary" onClick={() => { void navigator.clipboard?.writeText(url); }}>Copy store link <ExternalLink size={14} /></button></div>}
+    </div>
+    <div className="dashboard-kpis" aria-label="Business summary">
+      <div className="dashboard-kpi"><span>Total orders</span><strong>{orders.length}</strong><small>{awaiting} awaiting action</small></div>
+      <div className="dashboard-kpi"><span>Payments received</span><strong>{money(paid)}</strong><small>Recorded against orders</small></div>
+      <div className="dashboard-kpi"><span>Outstanding balance</span><strong>{money(due)}</strong><small>Across non-cancelled orders</small></div>
+      <div className="dashboard-kpi"><span>Live products</span><strong>{products.filter(p => p.is_active).length}</strong><small>{products.length} catalogue items</small></div>
+    </div>
+    <div className="section-heading dashboard-section-heading"><div><h2>Activity</h2><p>Recent payments and items requiring a response</p></div><span className="period-pill">Last 7 days · All-time balances</span></div>
     <div className="dashboard-insights-grid">
       <section className="panel sales-panel">
         <div className="panel-heading"><div><h3>Payment activity</h3><p>Customer payments recorded over the last seven days</p></div><span className="sales-total">{money(last7Total)}</span></div>
@@ -571,9 +593,6 @@ function Dashboard({ business, products, orders, payments, reservations, reserva
     </div>
     <div className="bottom-note"><span><Clock3 size={15} /> Reservations</span>{reservationUnavailable ? "Reservation service is currently unavailable." : pendingReservations + " pending · " + reservations.length + " total requests"}{!demoMode && <button className="text-link" onClick={() => onNavigate("/app/reservations")}>View reservations <ArrowRight size={13} /></button>}</div>
   </>;
-}
-function MetricCard({ label, value, note, icon, tone, trend }: { label: string; value: string; note: string; icon: ReactNode; tone: string; trend: string }) {
-  return <div className="metric-card"><div className="metric-top"><span className={"metric-icon " + tone}>{icon}</span><span className="metric-trend">{trend}</span></div><span className="metric-label">{label}</span><strong className="metric-value">{value}</strong><span className="metric-note">{note}</span></div>;
 }
 function CustomerCell({ name, detail }: { name: string; detail: string }) {
   return <div className="customer-cell"><span className="customer-avatar">{initials(name)}</span><span><strong>{name}</strong><small>{detail}</small></span></div>;
