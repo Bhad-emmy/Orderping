@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { Link, Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
-import { Activity, ArrowRight, Bell, CalendarDays, Check, CheckCircle2, ChevronDown, CircleHelp, ClipboardList, Clock3, Copy, CreditCard, ExternalLink, Eye, EyeOff, LayoutDashboard, LoaderCircle, LogOut, Menu, Package, Plus, RefreshCw, Search, Settings, ShoppingBag, ShoppingCart, Store, Truck, Wallet, MessageCircle, X } from "lucide-react";
+import { Activity, ArrowRight, Bell, CalendarDays, CalendarCheck, Check, CheckCircle2, ChevronDown, CircleHelp, ClipboardList, Clock3, Copy, CreditCard, ExternalLink, Eye, EyeOff, LayoutDashboard, LoaderCircle, LogOut, Menu, Package, Plus, RefreshCw, Search, Settings, ShoppingBag, ShoppingCart, Store, Truck, Wallet, MessageCircle, X } from "lucide-react";
 import type { Session, User } from "@supabase/supabase-js";
 import { formatNaira, isSupabaseConfigured, messageFromError, supabase } from "./lib/supabase";
 import PublicBookingPage from "./PublicBookingPage";
@@ -44,6 +44,7 @@ export default function App() {
     <Route path="/book/:slug" element={<PublicBookingPage />} />
     <Route path="/order/:token" element={<CustomerOrderPage />} />
     <Route path="/payment-return" element={<PaymentReturnPage />} />
+    <Route path="/dashboard-preview" element={<DashboardPreviewPage />} />
     <Route path="/login" element={session ? <Navigate to="/app" replace /> : <AuthScreen />} />
     <Route path="/" element={<LandingPage signedIn={Boolean(session)} />} />
     <Route path="/admin/activation" element={session && session.user.email?.toLowerCase() === "edwinchukwuemeka12@gmail.com" ? <AdminActivationPage user={session.user} /> : <Navigate to="/login" replace />} />
@@ -265,13 +266,27 @@ function VendorApp({ user }: { user: User }) {
       if (result.error) throw result.error;
       const current = result.data as Business | null; setBusiness(current);
       if (!current) { setProducts([]); setOrders([]); setReservations([]); setPaymentRecords([]); return; }
-      const [pr, or, payments] = await Promise.all([
+      const [pr] = await Promise.all([
         supabase.from("catalog_items").select("*").eq("business_id", current.id).eq("type", "product").order("created_at", { ascending: false }),
-        supabase.from("orders").select("*").eq("business_id", current.id).eq("order_type", "order").order("created_at", { ascending: false }).limit(200),
-        supabase.from("payment_records").select("*").eq("business_id", current.id).order("recorded_at", { ascending: false }).limit(500),
       ]);
-      if (pr.error) throw pr.error; if (or.error) throw or.error; if (payments.error) throw payments.error;
-      setProducts((pr.data || []) as Product[]); setOrders((or.data || []) as Order[]); setPaymentRecords((payments.data || []) as PaymentRecord[]);
+      if (pr.error) throw pr.error;
+      const allOrders: Order[] = [];
+      for (let offset = 0; ; offset += 500) {
+        const { data, error } = await supabase.from("orders").select("*").eq("business_id", current.id).eq("order_type", "order").order("created_at", { ascending: false }).range(offset, offset + 499);
+        if (error) throw error;
+        const batch = (data || []) as Order[];
+        allOrders.push(...batch);
+        if (batch.length < 500) break;
+      }
+      const allPayments: PaymentRecord[] = [];
+      for (let offset = 0; ; offset += 500) {
+        const { data, error } = await supabase.from("payment_records").select("*").eq("business_id", current.id).order("recorded_at", { ascending: false }).range(offset, offset + 499);
+        if (error) throw error;
+        const batch = (data || []) as PaymentRecord[];
+        allPayments.push(...batch);
+        if (batch.length < 500) break;
+      }
+      setProducts((pr.data || []) as Product[]); setOrders(allOrders); setPaymentRecords(allPayments);
       const rr = await supabase.functions.invoke("vendor-reservations", { body: { business_id: current.id } });
       if (rr.error) setReservationUnavailable(true);
       else { setReservations((rr.data?.reservations || []) as Reservation[]); setReservationUnavailable(false); }
@@ -437,7 +452,7 @@ function VendorApp({ user }: { user: User }) {
       {notice && <div className={"toast " + notice.type} role="status"><span>{notice.type === "success" ? <CheckCircle2 size={17} /> : <CircleHelp size={17} />}</span>{notice.text}</div>}
       {pageError && <div className="inline-alert error page-error"><span>{pageError}</span><button className="text-link" onClick={() => void loadData()}>Retry</button></div>}
       <Routes>
-        <Route index element={<Dashboard business={business} products={products} orders={orders} reservations={reservations} reservationUnavailable={reservationUnavailable} onAddProduct={() => openProduct()} onNavigate={navigate} />} />
+        <Route index element={<Dashboard business={business} products={products} orders={orders} payments={paymentRecords} reservations={reservations} reservationUnavailable={reservationUnavailable} onAddProduct={() => openProduct()} onNavigate={navigate} />} />
         <Route path="products" element={<ProductsPage products={products} search={search} setSearch={setSearch} onAdd={() => openProduct()} onEdit={openProduct} onToggle={toggleProduct} />} />
         <Route path="orders" element={<OrdersPage orders={filteredOrders} search={search} setSearch={setSearch} onStatus={updateOrder} onReissue={reissueOrderTracking} onPayment={order => { setPaymentOrder(order); setPaymentValue(""); setPaymentReference(""); setPaymentNote(""); setPaymentMethod("bank_transfer"); }} />} />
         <Route path="reservations" element={<ReservationsPage reservations={reservations} unavailable={reservationUnavailable} onStatus={reservationAction} />} />
@@ -455,21 +470,107 @@ function VendorApp({ user }: { user: User }) {
 function PageHeader({ eyebrow, title, description, action }: { eyebrow?: string; title: string; description: string; action?: ReactNode }) {
   return <div className="page-heading"><div><span className="eyebrow">{eyebrow || "YOUR BUSINESS"}</span><h1>{title}</h1><p>{description}</p></div>{action && <div className="heading-action">{action}</div>}</div>;
 }
-function Dashboard({ business, products, orders, reservations, reservationUnavailable, onAddProduct, onNavigate }: { business: Business; products: Product[]; orders: Order[]; reservations: Reservation[]; reservationUnavailable: boolean; onAddProduct: () => void; onNavigate: (path: string) => void }) {
-  const paid = orders.reduce((s, o) => s + Number(o.amount_paid_minor || 0), 0);
-  const due = orders.reduce((s, o) => s + Math.max(0, Number(o.total_amount_minor || 0) - Number(o.amount_paid_minor || 0)), 0);
-  const awaiting = orders.filter(o => ["new", "processing"].includes(o.status)).length;
-  const url = window.location.origin + "/store/" + business.slug;
-  return <><div className="welcome-strip"><div><span className="welcome-kicker">✦ YOUR STORE, AT A GLANCE</span><h2>Good business starts here.</h2><p>Here’s what’s happening with {business.name} today.</p></div><div className="welcome-art"><div className="art-circle circle-one" /><div className="art-circle circle-two" /><div className="art-card"><ShoppingBag size={23} /><span>Orders</span><strong>{String(orders.length).padStart(2, "0")}</strong></div></div></div>
-    <div className="quick-actions"><button className="button primary" onClick={onAddProduct}><Plus size={17} /> Add product</button><button className="button secondary" onClick={() => onNavigate("/app/orders")}><ShoppingCart size={16} /> View orders <ArrowRight size={15} /></button><button className="button secondary" onClick={() => { void navigator.clipboard?.writeText(url); }}><ExternalLink size={15} /> Copy store link</button></div>
-    <div className="section-heading"><div><h2>Business overview</h2><p>A snapshot of your sales activity</p></div><span className="period-pill"><Activity size={14} /> All time</span></div>
-    <div className="metric-grid"><MetricCard label="Total orders" value={String(orders.length)} note={awaiting + " need attention"} icon={<ShoppingCart size={19} />} tone="blue" trend="Order volume" /><MetricCard label="Payments received" value={money(paid)} note="Manually recorded" icon={<Wallet size={19} />} tone="green" trend="Collected" /><MetricCard label="Outstanding balance" value={money(due)} note="Across all orders" icon={<CreditCard size={19} />} tone="orange" trend="To collect" /><MetricCard label="Live products" value={String(products.filter(p => p.is_active).length)} note={products.length + " total products"} icon={<Package size={19} />} tone="purple" trend="Catalogue" /></div>
-    <div className="dashboard-grid"><section className="panel recent-panel"><div className="panel-heading"><div><h3>Recent orders</h3><p>Your latest customer activity</p></div><button className="text-link" onClick={() => onNavigate("/app/orders")}>All orders <ArrowRight size={14} /></button></div>{orders.length ? <div className="table-wrap"><table><thead><tr><th>Customer</th><th>Date</th><th>Status</th><th className="align-right">Total</th></tr></thead><tbody>{orders.slice(0, 5).map(o => <tr key={o.id}><td><CustomerCell name={o.customer_name} detail={o.customer_phone} /></td><td className="muted-cell">{shortDate(o.created_at)}</td><td><StatusPill status={o.status} /></td><td className="align-right amount-cell">{money(o.total_amount_minor)}</td></tr>)}</tbody></table></div> : <EmptyState icon={<ShoppingCart size={22} />} title="No orders yet" description="When customers place an order, it will appear here." action={<button className="button secondary small" onClick={() => onNavigate("/app/products")}>Add your first product</button>} />}</section>
-      <section className="panel getting-started"><div className="panel-heading"><div><h3>Getting started</h3><p>Three steps to launch your store</p></div><span className="step-count">{(business ? 1 : 0) + (products.length ? 1 : 0) + (orders.length ? 1 : 0)}/3</span></div><div className="checklist"><Checklist done={Boolean(business)} number="1" title="Set up your store" description="Your business profile is created." /><Checklist done={products.length > 0} number="2" title="Add your products" description="Give customers something to browse." action={!products.length ? <button className="text-link" onClick={onAddProduct}>Add first product <ArrowRight size={13} /></button> : undefined} /><Checklist done={orders.length > 0} number="3" title="Receive your first order" description="Share your storefront link with customers." action={<button className="text-link" onClick={() => { void navigator.clipboard?.writeText(url); }}>Copy store link <ArrowRight size={13} /></button>} /></div><div className="store-link-card"><div className="store-link-icon"><Store size={18} /></div><div><strong>Your storefront</strong><span>{window.location.host}/store/{business.slug}</span></div><button className="icon-button" aria-label="Open storefront" onClick={() => window.open(url, "_blank", "noopener,noreferrer")}><ExternalLink size={16} /></button></div></section></div>
-    <div className="bottom-note"><span><Clock3 size={15} /> Reservations</span>{reservationUnavailable ? "Reservation service is waiting for its backend functions." : reservations.length + " reservation requests"}<button className="text-link" onClick={() => onNavigate("/app/reservations")}>View reservations <ArrowRight size={13} /></button></div></>;
+type DashboardAppointment = { id: string; customer_name: string; starts_at: string; status: string; total_amount_minor: number | null };
+const demoBusiness: Business = { id: "demo-business", owner_id: "demo-owner", name: "Meka Demo Store", slug: "meka-demo-store", business_type: "product", email: "demo@example.com", whatsapp_number: null, timezone: "Africa/Lagos", approval_status: "approved" };
+const demoProducts: Product[] = [
+  { id: "demo-product-1", business_id: "demo-business", type: "product", name: "Classic Tote Bag", description: "Everyday canvas tote", price_minor: 850000, is_active: true },
+  { id: "demo-product-2", business_id: "demo-business", type: "product", name: "Leather Wallet", description: "Compact everyday wallet", price_minor: 1250000, is_active: true },
+  { id: "demo-product-3", business_id: "demo-business", type: "product", name: "Gift Box", description: "Curated gift set", price_minor: 1800000, is_active: false },
+];
+const demoOrders: Order[] = [
+  { id: "demo-order-1001", business_id: "demo-business", customer_name: "Ada Okafor", customer_email: "ada@example.com", customer_phone: "+234 801 000 0001", status: "new", total_amount_minor: 2400000, amount_paid_minor: 1000000, currency_code: "NGN", fulfilment_method: "delivery", customer_note: null, created_at: new Date(Date.now() - 2 * 3600000).toISOString() },
+  { id: "demo-order-1002", business_id: "demo-business", customer_name: "Tunde Bello", customer_email: "tunde@example.com", customer_phone: "+234 802 000 0002", status: "processing", total_amount_minor: 1250000, amount_paid_minor: 1250000, currency_code: "NGN", fulfilment_method: "collection", customer_note: null, created_at: new Date(Date.now() - 8 * 3600000).toISOString() },
+  { id: "demo-order-1003", business_id: "demo-business", customer_name: "Chioma Eze", customer_email: "chioma@example.com", customer_phone: "+234 803 000 0003", status: "delivered", total_amount_minor: 1800000, amount_paid_minor: 1800000, currency_code: "NGN", fulfilment_method: "delivery", customer_note: null, created_at: new Date(Date.now() - 86400000).toISOString() },
+  { id: "demo-order-1004", business_id: "demo-business", customer_name: "Ibrahim Musa", customer_email: "ibrahim@example.com", customer_phone: "+234 804 000 0004", status: "new", total_amount_minor: 850000, amount_paid_minor: 0, currency_code: "NGN", fulfilment_method: "collection", customer_note: null, created_at: new Date(Date.now() - 2 * 86400000).toISOString() },
+];
+const demoPayments: PaymentRecord[] = [
+  { id: "demo-payment-1", business_id: "demo-business", order_id: "demo-order-1001", amount_minor: 1000000, method: "bank_transfer", reference: "DEMO-001", note: null, recorded_at: new Date(Date.now() - 2 * 3600000).toISOString(), recorded_by: "demo-owner" },
+  { id: "demo-payment-2", business_id: "demo-business", order_id: "demo-order-1002", amount_minor: 1250000, method: "pos", reference: "DEMO-002", note: null, recorded_at: new Date(Date.now() - 20 * 3600000).toISOString(), recorded_by: "demo-owner" },
+  { id: "demo-payment-3", business_id: "demo-business", order_id: "demo-order-1003", amount_minor: 900000, method: "cash", reference: "DEMO-003", note: null, recorded_at: new Date(Date.now() - 2 * 86400000).toISOString(), recorded_by: "demo-owner" },
+];
+const demoReservations: Reservation[] = [
+  { id: "demo-reservation-1", customer_name: "Nneka James", customer_phone: "+234 805 000 0005", status: "pending", requested_pickup_at: new Date(Date.now() + 86400000).toISOString(), total_amount_minor: 850000, created_at: new Date().toISOString() },
+  { id: "demo-reservation-2", customer_name: "Samuel Obi", customer_phone: "+234 806 000 0006", status: "confirmed", requested_pickup_at: new Date(Date.now() + 2 * 86400000).toISOString(), total_amount_minor: 1250000, created_at: new Date().toISOString() },
+];
+const demoAppointments: DashboardAppointment[] = [
+  { id: "demo-appointment-1", customer_name: "Amaka Nwosu", starts_at: new Date(Date.now() + 3 * 3600000).toISOString(), status: "pending", total_amount_minor: 1500000 },
+  { id: "demo-appointment-2", customer_name: "David Akin", starts_at: new Date(Date.now() + 27 * 3600000).toISOString(), status: "confirmed", total_amount_minor: 2000000 },
+];
+function DashboardPreviewPage() {
+  return <div className="app-shell"><main className="main-area"><header className="topbar"><div className="breadcrumbs"><span>OrderPing</span><span className="crumb-slash">/</span><strong>Dashboard preview</strong></div><span className="period-pill">DEMO DATA · READ ONLY</span></header><div className="page-container"><div className="inline-alert info">This is a sample dashboard preview. All names, orders and figures are fictional. No payment or activation is required, and no live business data is changed.</div><Dashboard business={demoBusiness} products={demoProducts} orders={demoOrders} payments={demoPayments} reservations={demoReservations} reservationUnavailable={false} onAddProduct={() => {}} onNavigate={() => {}} demoMode /></div></main></div>;
 }
-function Checklist({ done, number, title, description, action }: { done: boolean; number: string; title: string; description: string; action?: ReactNode }) {
-  return <div className="checklist-item"><span className={"check-circle" + (done ? " done" : "")}>{done ? <Check size={14} /> : number}</span><div><strong>{title}</strong><p>{description}</p>{action}</div></div>;
+function Dashboard({ business, products, orders, payments, reservations, reservationUnavailable, onAddProduct, onNavigate, demoMode = false }: { business: Business; products: Product[]; orders: Order[]; payments: PaymentRecord[]; reservations: Reservation[]; reservationUnavailable: boolean; onAddProduct: () => void; onNavigate: (path: string) => void; demoMode?: boolean }) {
+  const [appointments, setAppointments] = useState<DashboardAppointment[]>(demoMode ? demoAppointments : []);
+  const [appointmentsLoading, setAppointmentsLoading] = useState(true);
+  const [appointmentsError, setAppointmentsError] = useState("");
+  const paid = orders.reduce((s, o) => s + Number(o.amount_paid_minor || 0), 0);
+  const due = orders.filter(o => o.status !== "cancelled").reduce((s, o) => s + Math.max(0, Number(o.total_amount_minor || 0) - Number(o.amount_paid_minor || 0)), 0);
+  const awaiting = orders.filter(o => ["new", "processing"].includes(o.status)).length;
+  const pendingReservations = reservations.filter(r => ["pending", "new"].includes(r.status)).length;
+  const url = window.location.origin + "/store/" + business.slug;
+  useEffect(() => {
+    let active = true;
+    async function loadAppointments() {
+      if (demoMode || !supabase) { setAppointmentsLoading(false); return; }
+      setAppointmentsLoading(true); setAppointmentsError("");
+      const { data, error } = await supabase.from("appointments")
+        .select("id,customer_name,starts_at,status,total_amount_minor")
+        .eq("business_id", business.id)
+        .gte("starts_at", new Date().toISOString())
+        .in("status", ["pending", "confirmed"])
+        .order("starts_at", { ascending: true }).limit(100);
+      if (!active) return;
+      if (error) setAppointmentsError(messageFromError(error));
+      else setAppointments((data || []) as DashboardAppointment[]);
+      setAppointmentsLoading(false);
+    }
+    void loadAppointments();
+    return () => { active = false; };
+  }, [business.id, demoMode]);
+  const salesDays = useMemo(() => {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    return Array.from({ length: 7 }, (_, index) => {
+      const day = new Date(today); day.setDate(today.getDate() - (6 - index));
+      const next = new Date(day); next.setDate(day.getDate() + 1);
+      const amount = payments.reduce((sum, payment) => {
+        const recorded = new Date(payment.recorded_at);
+        return recorded >= day && recorded < next ? sum + Number(payment.amount_minor || 0) : sum;
+      }, 0);
+      return { day, amount };
+    });
+  }, [payments]);
+  const chartMax = Math.max(1, ...salesDays.map(day => day.amount));
+  const last7Total = salesDays.reduce((sum, day) => sum + day.amount, 0);
+  const upcoming = appointments.slice(0, 4);
+  const pendingAppointments = appointments.filter(item => item.status === "pending").length;
+  const dateRange = new Intl.DateTimeFormat("en-NG", { day: "numeric", month: "short" });
+  const dayLabel = (date: Date) => new Intl.DateTimeFormat("en-NG", { weekday: "short" }).format(date);
+  return <>
+    <div className="welcome-strip"><div><span className="welcome-kicker">✦ YOUR STORE, AT A GLANCE</span><h2>Good business starts here.</h2><p>Here’s what’s happening with {business.name} today.</p></div><div className="welcome-art"><div className="art-circle circle-one" /><div className="art-circle circle-two" /><div className="art-card"><ShoppingBag size={23} /><span>Orders</span><strong>{String(orders.length).padStart(2, "0")}</strong></div></div></div>
+    {!demoMode && <div className="quick-actions"><button className="button primary" onClick={onAddProduct}><Plus size={17} /> Add product</button><button className="button secondary" onClick={() => onNavigate("/app/orders")}><ShoppingCart size={16} /> View orders <ArrowRight size={15} /></button><button className="button secondary" onClick={() => { void navigator.clipboard?.writeText(url); }}><ExternalLink size={15} /> Copy store link</button></div>}
+    <div className="section-heading"><div><h2>Business overview</h2><p>Live totals across your recorded business activity</p></div><span className="period-pill"><Activity size={14} /> All time</span></div>
+    <div className="metric-grid"><MetricCard label="Total orders" value={String(orders.length)} note={awaiting + " need attention"} icon={<ShoppingCart size={19} />} tone="blue" trend="Order volume" /><MetricCard label="Payments received" value={money(paid)} note="Recorded against customer orders" icon={<Wallet size={19} />} tone="green" trend="Collected" /><MetricCard label="Outstanding balance" value={money(due)} note="Across all non-cancelled orders" icon={<CreditCard size={19} />} tone="orange" trend="To collect" /><MetricCard label="Live products" value={String(products.filter(p => p.is_active).length)} note={products.length + " total products"} icon={<Package size={19} />} tone="purple" trend="Catalogue" /></div>
+    <div className="dashboard-insights-grid">
+      <section className="panel sales-panel">
+        <div className="panel-heading"><div><h3>Payment activity</h3><p>Customer payments recorded over the last seven days</p></div><span className="sales-total">{money(last7Total)}</span></div>
+        <div className="sales-chart" role="img" aria-label={"Payments recorded in the last seven days: " + money(last7Total)}>
+          {salesDays.map((item, index) => <div className="sales-chart-day" key={item.day.toISOString()}><div className="sales-chart-bar-wrap"><div className={"sales-chart-bar" + (index === 6 ? " today" : "")} style={{ height: Math.max(item.amount ? 8 : 3, item.amount / chartMax * 100) + "%" }} title={money(item.amount)} /></div><span>{dayLabel(item.day)}</span></div>)}
+        </div>
+        <div className="sales-chart-foot"><span><i /> Payments recorded by date</span><span>{dateRange.format(salesDays[0].day)} – {dateRange.format(salesDays[6].day)}</span></div>
+      </section>
+      <section className="panel attention-panel">
+        <div className="panel-heading"><div><h3>Needs attention</h3><p>Items that may need your response</p></div><Activity size={17} /></div>
+        <button className="attention-row" disabled={demoMode} onClick={() => onNavigate("/app/orders")}><span className="attention-icon orange"><ShoppingCart size={17} /></span><span><strong>Orders awaiting action</strong><small>New and processing orders</small></span><b>{awaiting}</b><ArrowRight size={15} /></button>
+        <button className="attention-row" disabled={demoMode} onClick={() => onNavigate("/app/reservations")}><span className="attention-icon purple"><ClipboardList size={17} /></span><span><strong>Pending reservations</strong><small>Requests waiting for confirmation</small></span><b>{reservationUnavailable ? "—" : pendingReservations}</b><ArrowRight size={15} /></button>
+        <button className="attention-row" disabled={demoMode} onClick={() => onNavigate("/app/appointments")}><span className="attention-icon blue"><CalendarCheck size={17} /></span><span><strong>Pending appointments</strong><small>Upcoming requests awaiting response</small></span><b>{appointmentsLoading ? "…" : appointmentsError ? "—" : pendingAppointments}</b><ArrowRight size={15} /></button>
+        <button className="attention-row" disabled={demoMode} onClick={() => onNavigate("/app/payments")}><span className="attention-icon green"><CreditCard size={17} /></span><span><strong>Outstanding balances</strong><small>Customer payments still due</small></span><b>{money(due)}</b><ArrowRight size={15} /></button>
+      </section>
+    </div>
+    <div className="dashboard-grid"><section className="panel recent-panel"><div className="panel-heading"><div><h3>Recent orders</h3><p>Your latest customer activity</p></div>{!demoMode && <button className="text-link" onClick={() => onNavigate("/app/orders")}>All orders <ArrowRight size={14} /></button>}</div>{orders.length ? <div className="table-wrap"><table><thead><tr><th>Customer</th><th>Date</th><th>Status</th><th className="align-right">Total</th></tr></thead><tbody>{orders.slice(0, 5).map(o => <tr key={o.id}><td><CustomerCell name={o.customer_name} detail={o.customer_phone} /></td><td className="muted-cell">{shortDate(o.created_at)}</td><td><StatusPill status={o.status} /></td><td className="align-right amount-cell">{money(o.total_amount_minor)}</td></tr>)}</tbody></table></div> : <EmptyState icon={<ShoppingCart size={22} />} title="No orders yet" description="When customers place an order, it will appear here." action={<button className="button secondary small" onClick={() => onNavigate("/app/products")}>Add your first product</button>} />}</section>
+      <section className="panel upcoming-panel"><div className="panel-heading"><div><h3>Upcoming appointments</h3><p>Next scheduled customer bookings</p></div>{!demoMode && <button className="text-link" onClick={() => onNavigate("/app/appointments")}>View all <ArrowRight size={14} /></button>}</div>{appointmentsLoading ? <div className="dashboard-empty">Loading appointments…</div> : appointmentsError ? <div className="dashboard-empty dashboard-error">{appointmentsError}</div> : upcoming.length ? <div className="upcoming-list">{upcoming.map(item => <div className="upcoming-item" key={item.id}><span className="upcoming-date"><strong>{new Intl.DateTimeFormat("en-NG", { day: "2-digit" }).format(new Date(item.starts_at))}</strong><small>{new Intl.DateTimeFormat("en-NG", { month: "short" }).format(new Date(item.starts_at))}</small></span><span className="upcoming-details"><strong>{item.customer_name}</strong><small>{dateLabel(item.starts_at)}</small></span><StatusPill status={item.status} /></div>)}</div> : <div className="dashboard-empty">No upcoming appointments. New booking requests will appear here.</div>}</section>
+    </div>
+    <div className="bottom-note"><span><Clock3 size={15} /> Reservations</span>{reservationUnavailable ? "Reservation service is currently unavailable." : pendingReservations + " pending · " + reservations.length + " total requests"}{!demoMode && <button className="text-link" onClick={() => onNavigate("/app/reservations")}>View reservations <ArrowRight size={13} /></button>}</div>
+  </>;
 }
 function MetricCard({ label, value, note, icon, tone, trend }: { label: string; value: string; note: string; icon: ReactNode; tone: string; trend: string }) {
   return <div className="metric-card"><div className="metric-top"><span className={"metric-icon " + tone}>{icon}</span><span className="metric-trend">{trend}</span></div><span className="metric-label">{label}</span><strong className="metric-value">{value}</strong><span className="metric-note">{note}</span></div>;
