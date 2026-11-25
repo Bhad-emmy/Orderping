@@ -88,7 +88,7 @@
     },
     {
       "slug": "flutterwave-checkout",
-      "id": "c6e59b77954493127f4af76ee911510cb35292f69992d43a780023ca4cf3dd4c",
+      "id": "b1d7fd1f-a45e-4aa7-98e5-76797f2c2e",
       "version": 1,
       "verify_jwt": false,
       "source_path": "ops/live-edge-functions/flutterwave-checkout/index.ts"
