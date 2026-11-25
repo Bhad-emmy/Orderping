@@ -1,0 +1,132 @@
+{
+  "captured_at": "2026-11-25",
+  "source_project_ref": "baoqyhhyenimfhkrwspn",
+  "functions": [
+    {
+      "slug": "flutterwave-verify-payment",
+      "id": "b2fe33f5-8e54-44d9-9f52-72a97ed57f0e",
+      "version": 1,
+      "verify_jwt": false,
+      "source_path": "ops/live-edge-functions/flutterwave-verify-payment/index.ts"
+    },
+    {
+      "slug": "paystack-webhook",
+      "id": "1b8e5410-603d-4186-b058-56de1f3a5ccc",
+      "version": 3,
+      "verify_jwt": false,
+      "source_path": "ops/live-edge-functions/paystack-webhook/index.ts"
+    },
+    {
+      "slug": "wallet-funding",
+      "id": "8229b07e-2b6b-49ad-8220-80952e9354ad",
+      "version": 3,
+      "verify_jwt": true,
+      "source_path": "ops/live-edge-functions/wallet-funding/index.ts"
+    },
+    {
+      "slug": "public-storefront",
+      "id": "117ad821-8f78-4299-8e1b-62fabf972599",
+      "version": 7,
+      "verify_jwt": false,
+      "source_path": "ops/live-edge-functions/public-storefront/index.ts"
+    },
+    {
+      "slug": "vendor-order-tracking-link",
+      "id": "eae7e5cd-cef2-470e-be0b-869d35480aa4",
+      "version": 5,
+      "verify_jwt": true,
+      "source_path": "ops/live-edge-functions/vendor-order-tracking-link/index.ts"
+    },
+    {
+      "slug": "admin-vendor-approval",
+      "id": "33f892bf-8f4e-466b-922b-fd23f49cbed6",
+      "version": 3,
+      "verify_jwt": true,
+      "source_path": "ops/live-edge-functions/admin-vendor-approval/index.ts"
+    },
+    {
+      "slug": "redeem-vendor-activation-pin",
+      "id": "9b39990a-e7f2-4f08-a7b5-1fcc3b2df1e0",
+      "version": 1,
+      "verify_jwt": true,
+      "source_path": "ops/live-edge-functions/redeem-vendor-activation-pin/index.ts"
+    },
+    {
+      "slug": "submit-reservation",
+      "id": "9a13d821-0a12-4a28-9d2c-94032aca06bc",
+      "version": 5,
+      "verify_jwt": false,
+      "source_path": "ops/live-edge-functions/submit-reservation/index.ts"
+    },
+    {
+      "slug": "vendor-signup",
+      "id": "ff3dba0a-ad4f-4cdd-a895-f71c8990b967",
+      "version": 1,
+      "verify_jwt": false,
+      "source_path": "ops/live-edge-functions/vendor-signup/index.ts"
+    },
+    {
+      "slug": "activate-order-tracking",
+      "id": "20b50e60-8388-43b8-b642-9472a302912d",
+      "version": 2,
+      "verify_jwt": true,
+      "source_path": "ops/live-edge-functions/activate-order-tracking/index.ts"
+    },
+    {
+      "slug": "public-booking",
+      "id": "fc9a360d-6a3d-48a5-873b-9e5814c49cf4",
+      "version": 3,
+      "verify_jwt": false,
+      "source_path": "ops/live-edge-functions/public-booking/index.ts"
+    },
+    {
+      "slug": "submit-order",
+      "id": "020ce59d-68b2-4a09-8a19-33b1e2f7fc41",
+      "version": 8,
+      "verify_jwt": false,
+      "source_path": "ops/live-edge-functions/submit-order/index.ts"
+    },
+    {
+      "slug": "flutterwave-checkout",
+      "id": "c6e59b77954493127f4af76ee911510cb35292f69992d43a780023ca4cf3dd4c",
+      "version": 1,
+      "verify_jwt": false,
+      "source_path": "ops/live-edge-functions/flutterwave-checkout/index.ts"
+    },
+    {
+      "slug": "vendor-payment-account",
+      "id": "51430837-1e7d-47ef-b423-83a8b0e2c12e",
+      "version": 1,
+      "verify_jwt": true,
+      "source_path": "ops/live-edge-functions/vendor-payment-account/index.ts"
+    },
+    {
+      "slug": "vendor-reservations",
+      "id": "ca137be7-64ec-4f96-bbd7-cc61c0aabfe4",
+      "version": 3,
+      "verify_jwt": true,
+      "source_path": "ops/live-edge-functions/vendor-reservations/index.ts"
+    },
+    {
+      "slug": "flutterwave-webhook",
+      "id": "35bf5d81-aef6-410c-8c08-60e62c42fba8",
+      "version": 1,
+      "verify_jwt": false,
+      "source_path": "ops/live-edge-functions/flutterwave-webhook/index.ts"
+    },
+    {
+      "slug": "update-reservation-status",
+      "id": "a01d1216-2828-4ce8-8142-a1fda4d4bb71",
+      "version": 3,
+      "verify_jwt": true,
+      "source_path": "ops/live-edge-functions/update-reservation-status/index.ts"
+    },
+    {
+      "slug": "customer-order-status",
+      "id": "45f356e1-eeff-4465-869f-56e628989bed",
+      "version": 5,
+      "verify_jwt": false,
+      "source_path": "ops/live-edge-functions/customer-order-status/index.ts"
+    }
+  ]
+}
