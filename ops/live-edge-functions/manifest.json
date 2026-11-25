@@ -1,0 +1,25 @@
+{
+  "archived_at": "2026-11-25",
+  "source_project_ref": "baoqyhhyenimfhkrwspn",
+  "note": "Deployed OrderPing Edge Function source snapshot captured immediately before temporary disablement. The Oka Rides function oka-rides-api is intentionally excluded.",
+  "functions": [
+    {
+      "slug": "update-reservation-status",
+      "id": "a01d1216-2828-4ce8-8142-a1fda4d4bb71",
+      "version": 3,
+      "verify_jwt": true,
+      "files": [
+        "index.ts"
+      ]
+    },
+    {
+      "slug": "customer-order-status",
+      "id": "45f356e1-eeff-4465-869f-56e628989bed",
+      "version": 5,
+      "verify_jwt": false,
+      "files": [
+        "index.ts"
+      ]
+    }
+  ]
+}
